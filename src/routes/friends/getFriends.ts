@@ -45,11 +45,62 @@ router.get('/list/:userId', async (req: Request, res: Response) => {
       if (friendDoc.exists) {
         const friendData = friendDoc.data();
         
-        // For now, use placeholder values until Firestore indexes are created
-        // TODO: Re-enable complex queries once indexes are ready
-        let todayFocus = Math.floor(Math.random() * 120); // Random 0-120 minutes for demo
-        let weeklyMinutes = Math.floor(Math.random() * 500); // Random 0-500 minutes for demo  
-        let focusStreak = Math.floor(Math.random() * 30); // Random 0-30 days for demo
+        // Get friend's focus sessions for today and this week
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        
+        // Get today's focus time
+        const todaySessionsQuery = await db.collection('focusSessions')
+          .where('userId', '==', friendId)
+          .where('createdAt', '>=', today)
+          .get();
+        
+        let todayFocus = 0;
+        todaySessionsQuery.forEach(doc => {
+          const session = doc.data();
+          todayFocus += session.duration || 0;
+        });
+
+        // Get this week's focus time
+        const weekSessionsQuery = await db.collection('focusSessions')
+          .where('userId', '==', friendId)
+          .where('createdAt', '>=', weekStart)
+          .get();
+        
+        let weeklyMinutes = 0;
+        weekSessionsQuery.forEach(doc => {
+          const session = doc.data();
+          weeklyMinutes += session.duration || 0;
+        });
+
+        // Calculate focus streak (simplified - consecutive days with focus sessions)
+        let focusStreak = 0;
+        const checkDate = new Date(today);
+        
+        while (focusStreak < 30) { // Check last 30 days max
+          const dayStart = new Date(checkDate);
+          dayStart.setHours(0, 0, 0, 0);
+          
+          const dayEnd = new Date(checkDate);
+          dayEnd.setHours(23, 59, 59, 999);
+          
+          const daySessionsQuery = await db.collection('focusSessions')
+            .where('userId', '==', friendId)
+            .where('createdAt', '>=', dayStart)
+            .where('createdAt', '<=', dayEnd)
+            .limit(1)
+            .get();
+          
+          if (!daySessionsQuery.empty) {
+            focusStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
 
         friendsData.push({
           id: friendId,

@@ -9,6 +9,9 @@ import getFriendsRoute from './routes/friends/getFriends';
 import searchFriendsRoute from './routes/friends/searchFriends';
 import addFriendRoute from './routes/friends/addFriend';
 import removeFriendRoute from './routes/friends/removeFriend';
+import setupProfileRoute from './routes/auth/setupProfile';
+import checkProfileRoute from './routes/auth/checkProfile';
+import checkUserStatusRoute from './routes/auth/checkUserStatus';
 
 dotenv.config();
 const app = express();
@@ -25,6 +28,9 @@ app.use('/api/friends', getFriendsRoute);
 app.use('/api/friends', searchFriendsRoute);
 app.use('/api/friends', addFriendRoute);
 app.use('/api/friends', removeFriendRoute);
+app.use('/api/auth', setupProfileRoute);
+app.use('/api/auth', checkProfileRoute);
+app.use('/api/auth', checkUserStatusRoute);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
