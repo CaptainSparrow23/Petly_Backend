@@ -38,83 +38,78 @@ router.get('/list/:userId', async (req: Request, res: Response) => {
 
     // Get friend details for each friend ID
     const friendsData = [];
-    
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayKey = today.toISOString().split('T')[0];
+
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - 6);
+    const weekStartKey = weekStart.toISOString().split('T')[0];
     for (const friendId of friendIds) {
       const friendDoc = await db.collection('users').doc(friendId).get();
-      
-      if (friendDoc.exists) {
-        const friendData = friendDoc.data();
-        
-        // Get friend's focus sessions for today and this week
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        
-        // Get today's focus time
-        const todaySessionsQuery = await db.collection('focusSessions')
-          .where('userId', '==', friendId)
-          .where('createdAt', '>=', today)
-          .get();
-        
-        let todayFocus = 0;
-        todaySessionsQuery.forEach(doc => {
-          const session = doc.data();
-          todayFocus += session.duration || 0;
-        });
 
-        // Get this week's focus time
-        const weekSessionsQuery = await db.collection('focusSessions')
-          .where('userId', '==', friendId)
-          .where('createdAt', '>=', weekStart)
-          .get();
-        
-        let weeklyMinutes = 0;
-        weekSessionsQuery.forEach(doc => {
-          const session = doc.data();
-          weeklyMinutes += session.duration || 0;
-        });
+      if (!friendDoc.exists) {
+        continue;
+      }
 
-        // Calculate focus streak (simplified - consecutive days with focus sessions)
-        let focusStreak = 0;
-        const checkDate = new Date(today);
-        
-        while (focusStreak < 30) { // Check last 30 days max
-          const dayStart = new Date(checkDate);
-          dayStart.setHours(0, 0, 0, 0);
-          
-          const dayEnd = new Date(checkDate);
-          dayEnd.setHours(23, 59, 59, 999);
-          
-          const daySessionsQuery = await db.collection('focusSessions')
-            .where('userId', '==', friendId)
-            .where('createdAt', '>=', dayStart)
-            .where('createdAt', '<=', dayEnd)
-            .limit(1)
-            .get();
-          
-          if (!daySessionsQuery.empty) {
-            focusStreak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
+      const friendData = friendDoc.data();
+      const focusCollection = db.collection('users').doc(friendId).collection('focus');
+
+      const focusSnapshot = await focusCollection
+        .where('date', '>=', weekStartKey)
+        .where('date', '<=', todayKey)
+        .get();
+
+      let todayFocus = 0;
+      let weeklyMinutes = 0;
+
+      focusSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateKey = typeof data?.date === 'string' ? data.date : doc.id;
+        const minutes = typeof data?.totalMinutes === 'number' ? data.totalMinutes : 0;
+
+        if (dateKey === todayKey) {
+          todayFocus = minutes;
+        }
+        weeklyMinutes += minutes;
+      });
+
+      let focusStreak = 0;
+      const streakCursor = new Date(today);
+
+      while (focusStreak < 30) {
+        const streakKey = streakCursor.toISOString().split('T')[0];
+        const doc = await focusCollection.doc(streakKey).get();
+
+        if (doc.exists) {
+          const data = doc.data();
+          const minutes = typeof data?.totalMinutes === 'number' ? data.totalMinutes : 0;
+          if (minutes > 0) {
+            focusStreak += 1;
+            streakCursor.setDate(streakCursor.getDate() - 1);
+            continue;
           }
         }
-
-        friendsData.push({
-          id: friendId,
-          name: friendData?.name || 'Unknown User',
-          email: friendData?.email || '',
-          username: friendData?.username || null,
-          avatar: friendData?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friendData?.name || 'User')}&background=6366f1&color=fff`,
-          focusStreak,
-          weeklyMinutes: Math.round(weeklyMinutes),
-          todayFocus: Math.round(todayFocus),
-          isOnline: false, // We can implement this later with real-time presence
-          petType: friendData?.petType || 'Cat', // Default pet type
-        });
+        break;
       }
+
+      friendsData.push({
+        id: friendId,
+        name: friendData?.name || 'Unknown User',
+        email: friendData?.email || '',
+        username: friendData?.username || null,
+        avatar:
+          friendData?.avatar ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            friendData?.name || 'User'
+          )}&background=6366f1&color=fff`,
+        focusStreak,
+        weeklyMinutes: Math.round(weeklyMinutes),
+        todayFocus: Math.round(todayFocus),
+        isOnline: false,
+        petType: friendData?.petType || 'Cat',
+      });
     }
 
     // Sort friends by weekly minutes (descending)
