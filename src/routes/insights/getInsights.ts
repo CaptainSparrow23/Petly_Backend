@@ -37,19 +37,21 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
     };
 
     const lastSevenDays = getLastSevenDays();
+    type WeeklyFocusSession = {
+      startTime: string;
+      endTime: string;
+      durationSeconds: number;
+      durationMinutes: number;
+      mode?: string;
+    };
+
     const weeklyData: Array<{
       date: string;
       dayName: string;
       totalMinutes: number;
       timeString: string;
       modes: Record<string, { totalSeconds: number; totalMinutes: number; timeString: string }>;
-      sessions: Array<{
-        startTime: string;
-        endTime: string;
-        durationSeconds: number;
-        durationMinutes: number;
-        mode?: string;
-      }>;
+      sessions: WeeklyFocusSession[];
     }> = [];
     const todayString = new Date().toISOString().split('T')[0];
 
@@ -74,40 +76,31 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
           return acc;
         }, {});
         const sessionsRaw = Array.isArray(data?.sessions) ? (data.sessions as Array<Record<string, unknown>>) : [];
-        const sessions = sessionsRaw
-          .map((session) => {
-            const startTime = typeof session?.startTime === 'string' ? session.startTime : null;
-            const endTime = typeof session?.endTime === 'string' ? session.endTime : null;
-            if (!startTime || !endTime) {
-              return null;
-            }
-            const durationSeconds =
-              typeof session?.durationSeconds === 'number'
-                ? session.durationSeconds
-                : typeof session?.durationMinutes === 'number'
-                ? Math.floor(session.durationMinutes * 60)
-                : 0;
-            const durationMinutes =
-              typeof session?.durationMinutes === 'number'
-                ? session.durationMinutes
-                : Math.floor(durationSeconds / 60);
-            const modeValue = typeof session?.mode === 'string' ? session.mode : undefined;
+        const sessions = sessionsRaw.reduce<WeeklyFocusSession[]>((acc, session) => {
+          const startTime = typeof session?.startTime === 'string' ? session.startTime : null;
+          const endTime = typeof session?.endTime === 'string' ? session.endTime : null;
+          if (!startTime || !endTime) {
+            return acc;
+          }
 
-            return {
-              startTime,
-              endTime,
-              durationSeconds,
-              durationMinutes,
-              mode: modeValue,
-            };
-          })
-          .filter((session): session is {
-            startTime: string;
-            endTime: string;
-            durationSeconds: number;
-            durationMinutes: number;
-            mode: string | undefined;
-          } => session !== null);
+          const durationSeconds =
+            typeof session?.durationSeconds === 'number'
+              ? Math.max(0, Math.round(session.durationSeconds))
+              : typeof session?.durationMinutes === 'number'
+              ? Math.max(0, Math.round(session.durationMinutes * 60))
+              : 0;
+          const durationMinutes = Math.max(0, Math.round(durationSeconds / 60));
+          const modeValue = typeof session?.mode === 'string' ? session.mode : undefined;
+
+          acc.push({
+            startTime,
+            endTime,
+            durationSeconds,
+            durationMinutes,
+            mode: modeValue,
+          });
+          return acc;
+        }, []);
         
         weeklyData.push({
           date: day.date,
