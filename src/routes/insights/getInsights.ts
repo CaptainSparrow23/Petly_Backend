@@ -210,7 +210,7 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
       };
     })();
 
-    console.log(`📊 Weekly focus data fetched for user ${userId}:`, weeklyData.map(d => `${d.dayName}: ${d.timeString}`));
+    console.log(`📊 Weekly focus data fetched for user`);
 
     res.status(200).json({
       success: true,

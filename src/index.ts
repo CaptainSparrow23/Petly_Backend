@@ -3,14 +3,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import focusRoutes from './routes/focus/postFocusTime';
 import accountRoutes from './routes/insights/getInsights';
-import updateUsernameRoutes from './routes/user/updateUsername';
-import profileStatsRoutes from './routes/user/getProfileInfo';
+import updateProfileRoute from './routes/user/updateProfile';
+import getUserProfileRoute from './routes/user/getUserProfile';
 import getFriendsRoute from './routes/friends/getFriends';
 import searchFriendsRoute from './routes/friends/searchFriends';
 import addFriendRoute from './routes/friends/addFriend';
 import removeFriendRoute from './routes/friends/removeFriend';
 import setupProfileRoute from './routes/auth/setupProfile';
 import checkUserStatusRoute from './routes/auth/checkUserStatus';
+import saveUserInfoRoute from './routes/auth/saveUserInfo';
 
 dotenv.config();
 const app = express();
@@ -23,8 +24,8 @@ app.use('/api/focus', focusRoutes);
 
 app.use('/api/account', accountRoutes);
 
-app.use('/api/user', updateUsernameRoutes);
-app.use('/api/user', profileStatsRoutes);
+app.use('/api/user', updateProfileRoute);
+app.use('/api/user', getUserProfileRoute);
 
 app.use('/api/friends', getFriendsRoute);
 app.use('/api/friends', searchFriendsRoute);
@@ -33,6 +34,7 @@ app.use('/api/friends', removeFriendRoute);
 
 app.use('/api/auth', setupProfileRoute);
 app.use('/api/auth', checkUserStatusRoute);
+app.use('/api/auth', saveUserInfoRoute);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {

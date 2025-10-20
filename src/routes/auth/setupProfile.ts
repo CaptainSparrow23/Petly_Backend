@@ -4,7 +4,7 @@ import { db } from '../../firebase';
 const router = Router();
 
 router.post('/setup-profile', async (req: Request, res: Response) => {
-  const { userId, username, profilePicture } = req.body;
+  const { userId, username, profileId } = req.body;
 
   if (!userId) {
     return res.status(400).json({ 
@@ -20,10 +20,10 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
     });
   }
 
-  if (!profilePicture || typeof profilePicture !== 'string') {
+  if (!profileId || typeof profileId !== 'number') {
     return res.status(400).json({ 
       success: false,
-      error: 'Profile picture is required and must be a string' 
+      error: 'Profile picture ID is required and must be a number' 
     });
   }
 
@@ -74,9 +74,7 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
     const userDocRef = db.collection('users').doc(userId);
     await userDocRef.set({
       username: trimmedUsername,
-      profilePicture: profilePicture,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      profileId: profileId,
     }, { merge: true });
 
     console.log(`✅ Profile setup complete for user ${userId}: "${trimmedUsername}"`);
@@ -85,7 +83,7 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
       success: true,
       data: { 
         username: trimmedUsername,
-        profilePicture: profilePicture
+        profileId: profileId
       },
       message: 'Profile setup successfully'
     });
