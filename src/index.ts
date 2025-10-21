@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import focusRoutes from './routes/focus/postFocusTime';
 import accountRoutes from './routes/insights/getInsights';
+import weeklyFocusRoute from './routes/insights/getWeeklyFocus';
+import monthlySummaryRoute from './routes/insights/getMonthlySummary';
 import updateProfileRoute from './routes/user/updateProfile';
 import getUserProfileRoute from './routes/user/getUserProfile';
 import getFriendsRoute from './routes/friends/getFriends';
@@ -24,6 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/focus', focusRoutes);
 
 app.use('/api/account', accountRoutes);
+app.use('/api/account', weeklyFocusRoute);
+app.use('/api/focus', monthlySummaryRoute);
 
 app.use('/api/user', updateProfileRoute);
 app.use('/api/user', getUserProfileRoute);
