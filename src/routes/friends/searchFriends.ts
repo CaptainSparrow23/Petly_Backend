@@ -5,7 +5,8 @@ const router = Router();
 const db = admin.firestore();
 
 // Search for users to add as friends
-router.get('/search/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: Request, res: Response) => {
+  console.log('Searching for friends...');
   try {
     const { userId } = req.params;
     const { query } = req.query;
@@ -30,66 +31,49 @@ router.get('/search/:userId', async (req: Request, res: Response) => {
     const userDoc = await db.collection('users').doc(userId).get();
     const currentUserFriends = userDoc.exists ? (userDoc.data()?.friends || []) : [];
 
-    // Search users by username and name
+    // Search users by username only
     const usersCollection = db.collection('users');
     
-    // Search by username
-    const usernameQuery = await usersCollection
-      .where('username', '>=', searchTerm)
-      .where('username', '<=', searchTerm + '\uf8ff')
-      .limit(20)
-      .get();
+    // Get all users and filter in memory for case-insensitive partial match
+    const allUsersQuery = await usersCollection.get();
+    
+    const foundUsers: any[] = [];
 
-    // Search by name (case insensitive)
-    const nameQuery = await usersCollection
-      .orderBy('name')
-      .startAt(searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1))
-      .endAt(searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1) + '\uf8ff')
-      .limit(20)
-      .get();
-
-    const foundUsers = new Map();
-
-    // Process username results
-    usernameQuery.forEach(doc => {
+    allUsersQuery.forEach(doc => {
       const userData = doc.data();
       const docId = doc.id;
       
       // Exclude current user and existing friends
       if (docId !== userId && !currentUserFriends.includes(docId)) {
-        foundUsers.set(docId, {
-          id: docId,
-          name: userData.name || 'Unknown User',
-          username: userData.username || null,
-          email: userData.email || '',
-          avatar: userData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || 'User')}&background=6366f1&color=fff`,
-          isFriend: false,
-        });
-      }
-    });
-
-    // Process name results
-    nameQuery.forEach(doc => {
-      const userData = doc.data();
-      const docId = doc.id;
-      
-      // Exclude current user and existing friends
-      if (docId !== userId && !currentUserFriends.includes(docId)) {
-        // Check if name contains search term (case insensitive)
-        if (userData.name && userData.name.toLowerCase().includes(searchTerm)) {
-          foundUsers.set(docId, {
+        const username = (userData.username || '').toLowerCase();
+        
+        // Check if username contains the search term (case-insensitive partial match)
+        if (username.includes(searchTerm)) {
+          foundUsers.push({
             id: docId,
-            name: userData.name || 'Unknown User',
+            displayName: userData.displayName || 'Unknown User',
             username: userData.username || null,
             email: userData.email || '',
-            avatar: userData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || 'User')}&background=6366f1&color=fff`,
+            profileId: userData.profileId || null,
             isFriend: false,
           });
         }
       }
     });
 
-    const searchResults = Array.from(foundUsers.values()).slice(0, 15);
+    // Sort by username and limit results
+    const searchResults = foundUsers
+      .sort((a, b) => {
+        const aUsername = (a.username || '').toLowerCase();
+        const bUsername = (b.username || '').toLowerCase();
+        // Prioritize matches that start with search term
+        const aStarts = aUsername.startsWith(searchTerm);
+        const bStarts = bUsername.startsWith(searchTerm);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return aUsername.localeCompare(bUsername);
+      })
+      .slice(0, 15);
 
     return res.json({ 
       success: true, 
