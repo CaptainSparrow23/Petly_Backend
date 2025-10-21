@@ -1,7 +1,7 @@
 // scripts/seedStoreCatalog.ts
 import { db } from '../src/firebase';
-import { petCatalog } from '../src/data/petCatalog';
-import { petCatalogLegendary } from '../src/data/petCatalogLegendary';
+import { petCatalog } from '../data/petCatalog';
+import { petCatalogLegendary } from '../data/petCatalogLegendary';
 
 async function seedStoreCatalog() {
   console.log(`🛍️ Seeding ${petCatalog.length} pets…`);

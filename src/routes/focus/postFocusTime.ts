@@ -12,7 +12,7 @@ const formatDurationLabel = (totalSeconds: number) => {
   return `${minutes} min${minutes !== 1 ? 's' : ''} ${seconds} sec${seconds !== 1 ? 's' : ''}`;
 };
 
-// Simple route to update daily focus time
+
 router.post('/session', async (req: Request, res: Response) => {
   const { userId, duration, mode, startTime, endTime } = req.body as {
     userId?: string;
@@ -20,7 +20,7 @@ router.post('/session', async (req: Request, res: Response) => {
     mode?: FocusMode | string;
     startTime?: number;
     endTime?: number;
-  }; // duration in milliseconds
+  }; 
 
   const normalizedMode = typeof mode === 'string' ? mode.trim() : undefined;
 
@@ -158,10 +158,6 @@ router.post('/session', async (req: Request, res: Response) => {
       },
     }, { merge: true });
 
-    console.log(`💾 Focus time updated for user ${userId}:`);
-    console.log(`   Date: ${dateKey}`);
-    console.log(`   Session: ${timeString}`);
-    console.log(`   Total today: ${newTimeString}`);
 
     res.status(200).json({
       message: 'Focus time updated successfully',

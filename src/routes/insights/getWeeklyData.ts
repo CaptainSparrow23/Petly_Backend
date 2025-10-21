@@ -10,7 +10,7 @@ const formatDurationLabel = (totalSeconds: number) => {
 };
 
 // GET route to fetch weekly focus data for a user
-router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
 
   if (!userId) {
