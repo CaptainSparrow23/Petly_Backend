@@ -67,6 +67,7 @@ router.get('/get_profile/:userId', async (req: Request, res: Response) => {
       email: userData?.email || null,
       profileId: userData?.profileId || null,
       timeActiveToday: timeActiveToday,
+      coins: userData?.coins || 0
     };
 
     res.status(200).json({
