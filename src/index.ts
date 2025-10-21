@@ -2,11 +2,10 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import focusRoutes from './routes/focus/postFocusTime';
-import accountRoutes from './routes/insights/getInsights';
-import weeklyFocusRoute from './routes/insights/getWeeklyFocus';
-import monthlySummaryRoute from './routes/insights/getMonthlySummary';
+import weeklyFocusRoute from './routes/insights/getWeeklyData';
+import monthlySummaryRoute from './routes/insights/getMonthlyData';
 import updateProfileRoute from './routes/user/updateProfile';
-import getUserProfileRoute from './routes/user/getUserProfile';
+import getUserProfileRoute from './routes/user/getGlobalState';
 import getFriendsRoute from './routes/friends/getFriends';
 import searchFriendsRoute from './routes/friends/searchFriends';
 import addFriendRoute from './routes/friends/addFriend';
@@ -16,6 +15,7 @@ import checkUserStatusRoute from './routes/auth/checkUserStatus';
 import saveUserInfoRoute from './routes/auth/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
 import legendaryCatalogRoute from './routes/store/getLegendaryCatalog';
+import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 
 dotenv.config();
 const app = express();
@@ -26,9 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/focus', focusRoutes);
 
-app.use('/api/account', accountRoutes);
-app.use('/api/account', weeklyFocusRoute);
-app.use('/api/focus', monthlySummaryRoute);
+app.use('/api/get_weekly_data', weeklyFocusRoute);
+app.use('/api/get_monthly_data', monthlySummaryRoute);
 
 app.use('/api/user', updateProfileRoute);
 app.use('/api/user', getUserProfileRoute);
@@ -44,6 +43,8 @@ app.use('/api/auth', saveUserInfoRoute);
 
 app.use('/api/store', storeCatalogRoute);
 app.use('/api/store', legendaryCatalogRoute);
+
+app.use('/api/pets/update_pet', updateSelectedPetRoute);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {

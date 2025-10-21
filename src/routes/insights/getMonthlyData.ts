@@ -3,7 +3,7 @@ import { db } from '../../firebase';
 
 const router = Router();
 
-router.get('/monthly-summary/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
 
   if (!userId) {
