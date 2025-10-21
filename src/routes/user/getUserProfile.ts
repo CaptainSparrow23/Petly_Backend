@@ -8,7 +8,7 @@ const router = Router();
  * Get user's complete profile information
  * Returns username, displayName, profileId, and email
  */
-router.get('/profile/:userId', async (req: Request, res: Response) => {
+router.get('/get_profile/:userId', async (req: Request, res: Response) => {
     console.log('Fetching user profile...');
   const { userId } = req.params;
   
@@ -36,12 +36,36 @@ router.get('/profile/:userId', async (req: Request, res: Response) => {
 
     const userData = doc.data();
     
+    // Get today's focus time
+    const today = new Date();
+    const todayKey = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    
+    let timeActiveToday = 0;
+    try {
+      const todayFocusDoc = await db
+        .collection('users')
+        .doc(userId)
+        .collection('focus')
+        .doc(todayKey)
+        .get();
+
+      if (todayFocusDoc.exists) {
+        const focusData = todayFocusDoc.data();
+        timeActiveToday = typeof focusData?.totalMinutes === 'number' 
+          ? focusData.totalMinutes 
+          : 0;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch today\'s focus time:', error);
+    }
+    
     const profileData = {
       userId: userId,
       username: userData?.username || null,
       displayName: userData?.displayName || null,
       email: userData?.email || null,
       profileId: userData?.profileId || null,
+      timeActiveToday: timeActiveToday,
     };
 
     console.log(`✅ Profile retrieved for user ${userId}: ${userData?.username || 'no username'}`);

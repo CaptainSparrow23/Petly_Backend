@@ -32,8 +32,8 @@ app.use('/api/focus', monthlySummaryRoute);
 app.use('/api/user', updateProfileRoute);
 app.use('/api/user', getUserProfileRoute);
 
-app.use('/api/friends', getFriendsRoute);
-app.use('/api/friends', searchFriendsRoute);
+app.use('/api/get_friends', getFriendsRoute);
+app.use('/api/search_friends', searchFriendsRoute);
 app.use('/api/friends', addFriendRoute);
 app.use('/api/friends', removeFriendRoute);
 

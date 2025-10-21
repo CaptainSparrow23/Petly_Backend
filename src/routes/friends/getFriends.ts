@@ -5,7 +5,7 @@ const router = Router();
 const db = admin.firestore();
 
 // Get user's friends list
-router.get('/list/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
@@ -40,12 +40,8 @@ router.get('/list/:userId', async (req: Request, res: Response) => {
     const friendsData = [];
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayKey = today.toISOString().split('T')[0];
+    const todayKey = today.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD in local timezone
 
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
-    const weekStartKey = weekStart.toISOString().split('T')[0];
     for (const friendId of friendIds) {
       const friendDoc = await db.collection('users').doc(friendId).get();
 
@@ -54,66 +50,35 @@ router.get('/list/:userId', async (req: Request, res: Response) => {
       }
 
       const friendData = friendDoc.data();
-      const focusCollection = db.collection('users').doc(friendId).collection('focus');
 
-      const focusSnapshot = await focusCollection
-        .where('date', '>=', weekStartKey)
-        .where('date', '<=', todayKey)
+      // Get today's focus time from the focus subcollection
+      const todayFocusDoc = await db
+        .collection('users')
+        .doc(friendId)
+        .collection('focus')
+        .doc(todayKey)
         .get();
 
-      let todayFocus = 0;
-      let weeklyMinutes = 0;
-
-      focusSnapshot.forEach((doc) => {
-        const data = doc.data();
-        const dateKey = typeof data?.date === 'string' ? data.date : doc.id;
-        const minutes = typeof data?.totalMinutes === 'number' ? data.totalMinutes : 0;
-
-        if (dateKey === todayKey) {
-          todayFocus = minutes;
-        }
-        weeklyMinutes += minutes;
-      });
-
-      let focusStreak = 0;
-      const streakCursor = new Date(today);
-
-      while (focusStreak < 30) {
-        const streakKey = streakCursor.toISOString().split('T')[0];
-        const doc = await focusCollection.doc(streakKey).get();
-
-        if (doc.exists) {
-          const data = doc.data();
-          const minutes = typeof data?.totalMinutes === 'number' ? data.totalMinutes : 0;
-          if (minutes > 0) {
-            focusStreak += 1;
-            streakCursor.setDate(streakCursor.getDate() - 1);
-            continue;
-          }
-        }
-        break;
+      let timeActiveToday = 0;
+      if (todayFocusDoc.exists) {
+        const focusData = todayFocusDoc.data();
+        timeActiveToday = typeof focusData?.totalMinutes === 'number' 
+          ? focusData.totalMinutes 
+          : 0;
       }
+      console.log(`Friend ${friendId} - Time active today: ${timeActiveToday} minutes`);
 
       friendsData.push({
-        id: friendId,
-        name: friendData?.name || 'Unknown User',
-        email: friendData?.email || '',
         username: friendData?.username || null,
-        avatar:
-          friendData?.avatar ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            friendData?.name || 'User'
-          )}&background=6366f1&color=fff`,
-        focusStreak,
-        weeklyMinutes: Math.round(weeklyMinutes),
-        todayFocus: Math.round(todayFocus),
-        isOnline: false,
-        petType: friendData?.petType || 'Cat',
+        displayName: friendData?.displayName || friendData?.name || 'Unknown User',
+        profileId: typeof friendData?.profileId === 'number' ? friendData.profileId : null,
+        userId: friendId,
+        timeActiveToday,
       });
     }
 
-    // Sort friends by weekly minutes (descending)
-    friendsData.sort((a, b) => b.weeklyMinutes - a.weeklyMinutes);
+    // Sort friends by time active today (descending)
+    friendsData.sort((a, b) => b.timeActiveToday - a.timeActiveToday);
 
     return res.json({ 
       success: true, 
