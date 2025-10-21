@@ -20,29 +20,109 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
   }
 
   try {
-    // Get the last 7 days including today
-    const getLastSevenDays = () => {
-      const days = [];
+    // Build the current Monday→Sunday window
+    const getCurrentWeek = () => {
       const today = new Date();
-      
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }); // Mon, Tue, etc.
-        days.push({ date: dateString, dayName });
-      }
-      
-      return days;
+      const monday = new Date(today);
+      const weekday = monday.getDay(); // 0 (Sun) - 6 (Sat)
+      const offset = (weekday + 6) % 7; // days since Monday
+      monday.setDate(monday.getDate() - offset);
+
+      return Array.from({ length: 7 }, (_, idx) => {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + idx);
+        return {
+          date: date.toISOString().split('T')[0], // YYYY-MM-DD
+          dayName: date.toLocaleDateString('en-US', { weekday: 'short' }), // Mon, Tue, etc.
+        };
+      });
     };
 
-    const lastSevenDays = getLastSevenDays();
+    const lastSevenDays = getCurrentWeek();
+    const focusCollection = db.collection('users').doc(userId).collection('focus');
+    const focusSnapshot = await focusCollection.get();
+    type FocusDoc = Record<string, any>;
+    const focusDataByDate = new Map<string, FocusDoc>();
+
+    focusSnapshot.forEach((doc) => {
+      const rawData = doc.data() ?? {};
+      const dateString = typeof rawData?.date === 'string' ? rawData.date : doc.id;
+      if (dateString) {
+        focusDataByDate.set(dateString, rawData);
+      }
+    });
+
     type WeeklyFocusSession = {
       startTime: string;
       endTime: string;
       durationSeconds: number;
       durationMinutes: number;
       mode?: string;
+    };
+
+    const getTotalSecondsFromDoc = (docData: FocusDoc | undefined) => {
+      if (!docData) return 0;
+      if (typeof docData.totalSeconds === 'number') {
+        return docData.totalSeconds;
+      }
+      if (typeof docData.totalMinutes === 'number') {
+        return docData.totalMinutes * 60;
+      }
+      return 0;
+    };
+
+    const normalizeModes = (modesInput: unknown) => {
+      const modesRaw =
+        modesInput && typeof modesInput === 'object'
+          ? (modesInput as Record<
+              string,
+              { totalSeconds?: number; timeString?: string; totalMinutes?: number }
+            >)
+          : {};
+
+      return Object.entries(modesRaw).reduce<
+        Record<string, { totalSeconds: number; totalMinutes: number; timeString: string }>
+      >((acc, [modeKey, value]) => {
+        const modeSeconds = typeof value?.totalSeconds === 'number' ? value.totalSeconds : 0;
+        acc[modeKey] = {
+          totalSeconds: modeSeconds,
+          totalMinutes: Math.floor(modeSeconds / 60),
+          timeString: value?.timeString || formatDurationLabel(modeSeconds),
+        };
+        return acc;
+      }, {});
+    };
+
+    const buildSessions = (sessionsInput: unknown) => {
+      const sessionsRaw = Array.isArray(sessionsInput)
+        ? (sessionsInput as Array<Record<string, unknown>>)
+        : [];
+
+      return sessionsRaw.reduce<WeeklyFocusSession[]>((acc, session) => {
+        const startTime = typeof session?.startTime === 'string' ? session.startTime : null;
+        const endTime = typeof session?.endTime === 'string' ? session.endTime : null;
+        if (!startTime || !endTime) {
+          return acc;
+        }
+
+        const durationSeconds =
+          typeof session?.durationSeconds === 'number'
+            ? Math.max(0, Math.round(session.durationSeconds))
+            : typeof session?.durationMinutes === 'number'
+            ? Math.max(0, Math.round(session.durationMinutes * 60))
+            : 0;
+        const durationMinutes = Math.max(0, Math.round(durationSeconds / 60));
+        const modeValue = typeof session?.mode === 'string' ? session.mode : undefined;
+
+        acc.push({
+          startTime,
+          endTime,
+          durationSeconds,
+          durationMinutes,
+          mode: modeValue,
+        });
+        return acc;
+      }, []);
     };
 
     const weeklyData: Array<{
@@ -52,76 +132,35 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
       timeString: string;
       modes: Record<string, { totalSeconds: number; totalMinutes: number; timeString: string }>;
       sessions: WeeklyFocusSession[];
-    }> = [];
-    const todayString = new Date().toISOString().split('T')[0];
+    }> = lastSevenDays.map((day) => {
+      const docData = focusDataByDate.get(day.date);
+      if (docData) {
+        const totalSeconds = getTotalSecondsFromDoc(docData);
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const timeString =
+          typeof docData.timeString === 'string' ? docData.timeString : formatDurationLabel(totalSeconds);
 
-    // Fetch focus data for each day
-    for (const day of lastSevenDays) {
-      const userDocRef = db.collection('users').doc(userId).collection('focus').doc(day.date);
-      const doc = await userDocRef.get();
-
-      if (doc.exists) {
-        const data = doc.data();
-        const totalMinutes = Math.floor((data?.totalSeconds || 0) / 60);
-        const modesRaw = data?.modes && typeof data.modes === 'object'
-          ? (data.modes as Record<string, { totalSeconds?: number; timeString?: string; totalMinutes?: number }>)
-          : {};
-        const modes = Object.entries(modesRaw).reduce<Record<string, { totalSeconds: number; totalMinutes: number; timeString: string }>>((acc, [modeKey, value]) => {
-          const modeSeconds = typeof value?.totalSeconds === 'number' ? value.totalSeconds : 0;
-          acc[modeKey] = {
-            totalSeconds: modeSeconds,
-            totalMinutes: Math.floor(modeSeconds / 60),
-            timeString: value?.timeString || formatDurationLabel(modeSeconds),
-          };
-          return acc;
-        }, {});
-        const sessionsRaw = Array.isArray(data?.sessions) ? (data.sessions as Array<Record<string, unknown>>) : [];
-        const sessions = sessionsRaw.reduce<WeeklyFocusSession[]>((acc, session) => {
-          const startTime = typeof session?.startTime === 'string' ? session.startTime : null;
-          const endTime = typeof session?.endTime === 'string' ? session.endTime : null;
-          if (!startTime || !endTime) {
-            return acc;
-          }
-
-          const durationSeconds =
-            typeof session?.durationSeconds === 'number'
-              ? Math.max(0, Math.round(session.durationSeconds))
-              : typeof session?.durationMinutes === 'number'
-              ? Math.max(0, Math.round(session.durationMinutes * 60))
-              : 0;
-          const durationMinutes = Math.max(0, Math.round(durationSeconds / 60));
-          const modeValue = typeof session?.mode === 'string' ? session.mode : undefined;
-
-          acc.push({
-            startTime,
-            endTime,
-            durationSeconds,
-            durationMinutes,
-            mode: modeValue,
-          });
-          return acc;
-        }, []);
-        
-        weeklyData.push({
+        return {
           date: day.date,
           dayName: day.dayName,
           totalMinutes,
-          timeString: data?.timeString || '0 mins',
-          modes,
-          sessions,
-        });
-      } else {
-        // No data for this day
-        weeklyData.push({
-          date: day.date,
-          dayName: day.dayName,
-          totalMinutes: 0,
-         timeString: '0 mins',
-         modes: {},
-         sessions: [],
-        });
+          timeString,
+          modes: normalizeModes(docData.modes),
+          sessions: buildSessions(docData.sessions),
+        };
       }
-    }
+
+      return {
+        date: day.date,
+        dayName: day.dayName,
+        totalMinutes: 0,
+        timeString: '0 mins',
+        modes: {},
+        sessions: [],
+      };
+    });
+
+    const todayString = new Date().toISOString().split('T')[0];
 
     // Aggregate totals
     const aggregateModes = (
@@ -175,6 +214,36 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
       ? summarize((todayEntry.totalMinutes ?? 0) * 60, aggregateModes([todayEntry]))
       : summarize(0, {} as Record<string, { totalSeconds: number }>);
 
+    const getPreviousDate = (dateString: string) => {
+      const date = new Date(`${dateString}T00:00:00Z`);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+      date.setUTCDate(date.getUTCDate() - 1);
+      return date.toISOString().split('T')[0];
+    };
+
+    let streakCount = 0;
+    let cursorDate: string | null = todayString;
+    let skippedToday = false;
+
+    while (cursorDate) {
+      const docData = focusDataByDate.get(cursorDate);
+      const totalSeconds = getTotalSecondsFromDoc(docData);
+
+      if (totalSeconds > 0) {
+        streakCount += 1;
+      } else if (!skippedToday) {
+        skippedToday = true;
+        cursorDate = getPreviousDate(cursorDate);
+        continue;
+      } else {
+        break;
+      }
+
+      cursorDate = getPreviousDate(cursorDate);
+    }
+
     // Lifetime summary from user doc
     const userDocRef = db.collection('users').doc(userId);
     const userDoc = await userDocRef.get();
@@ -220,6 +289,7 @@ router.get('/weekly-focus/:userId', async (req: Request, res: Response) => {
         week: weeklySummary,
         lifetime: lifetimeSummary,
       },
+      streak: streakCount,
       message: 'Weekly focus data retrieved successfully'
     });
 
