@@ -14,6 +14,7 @@ import removeFriendRoute from './routes/friends/removeFriend';
 import setupProfileRoute from './routes/auth/setupProfile';
 import checkUserStatusRoute from './routes/auth/checkUserStatus';
 import saveUserInfoRoute from './routes/auth/saveUserInfo';
+import storeCatalogRoute from './routes/store/getStoreCatalog';
 
 dotenv.config();
 const app = express();
@@ -39,6 +40,8 @@ app.use('/api/friends', removeFriendRoute);
 app.use('/api/auth', setupProfileRoute);
 app.use('/api/auth', checkUserStatusRoute);
 app.use('/api/auth', saveUserInfoRoute);
+
+app.use('/api/store', storeCatalogRoute);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
