@@ -13,6 +13,7 @@ import setupProfileRoute from './routes/auth/setupProfile';
 import checkUserStatusRoute from './routes/auth/checkUserStatus';
 import saveUserInfoRoute from './routes/auth/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
+import legendaryCatalogRoute from './routes/store/getLegendaryCatalog';
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/auth', checkUserStatusRoute);
 app.use('/api/auth', saveUserInfoRoute);
 
 app.use('/api/store', storeCatalogRoute);
+app.use('/api/store', legendaryCatalogRoute);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
