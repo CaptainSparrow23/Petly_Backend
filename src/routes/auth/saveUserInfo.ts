@@ -46,7 +46,8 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         data: {
           userId,
           email,
-          displayName: displayName || null
+          displayName: displayName || null,
+
         }
       });
     } else {
@@ -56,7 +57,8 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         displayName: displayName || null,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        coins: 100
+        coins: 100,
+        ownedPets: ['pet_skye'],
       });
 
       console.log(`✅ Created new user document: ${userId} (${email})`);
@@ -68,7 +70,9 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
           userId,
           email,
           displayName: displayName || null,
-          coins: 100
+          coins: 100,
+          ownedPets: ['pet_skye'],
+
         }
       });
     }
