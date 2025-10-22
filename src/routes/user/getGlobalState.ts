@@ -50,6 +50,7 @@ router.get('/get_profile/:userId', async (req: Request, res: Response) => {
         .get();
 
       if (todayFocusDoc.exists) {
+
         const focusData = todayFocusDoc.data();
         timeActiveToday = typeof focusData?.totalMinutes === 'number' 
           ? focusData.totalMinutes 
@@ -67,7 +68,10 @@ router.get('/get_profile/:userId', async (req: Request, res: Response) => {
       email: userData?.email || null,
       profileId: userData?.profileId || null,
       timeActiveToday: timeActiveToday,
-      coins: userData?.coins || 0
+      coins: typeof userData?.coins === 'number' ? userData.coins : 0,
+      ownedPets: Array.isArray(userData?.ownedPets)
+        ? (userData.ownedPets as string[])
+        : ['pet_skye'],
     };
 
     res.status(200).json({
