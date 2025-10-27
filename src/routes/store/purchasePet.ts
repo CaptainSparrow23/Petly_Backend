@@ -9,6 +9,7 @@ interface PurchasePayload {
   priceCoins?: unknown;
 }
 
+// Handles purchasing a pet, deducting coins, and updating the player's collection.
 router.post('/purchase/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { petId, priceCoins }: PurchasePayload = req.body ?? {};
@@ -27,6 +28,8 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     });
   }
 
+  // Look up the pet details in the pets catalog backend file so we know expected pricing.
+  // Maybe should change this to read from Firestore instead ?
   const catalogEntry = petCatalog.find((entry) => entry.id === petId);
   if (!catalogEntry) {
     return res.status(404).json({
@@ -36,6 +39,7 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
   }
 
   const expectedPrice = catalogEntry.priceCoins;
+  // Default the submitted price to the canonical price if the client omits it.
   const submittedPrice =
     typeof priceCoins === 'number' && priceCoins > 0 ? priceCoins : expectedPrice;
 
@@ -85,6 +89,7 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     }
 
     const updatedCoins = currentCoins - expectedPrice;
+    // Use a set to avoid duplicates in case of concurrent purchase attempts.
     const updatedOwnedPets = Array.from(new Set([...ownedPets, petId]));
 
     await userDocRef.set(
@@ -106,14 +111,6 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('❌ Error completing pet purchase:', error);
-
-    if (error && typeof error === 'object' && 'code' in error && error.code === 5) {
-      return res.status(500).json({
-        success: false,
-        error: 'Firestore database not found',
-        message: 'Please create a Firestore database in your Firebase console first',
-      });
-    }
 
     return res.status(500).json({
       success: false,
