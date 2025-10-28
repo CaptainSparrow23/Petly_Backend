@@ -2,8 +2,6 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import focusRoutes from './routes/focus/postFocusTime';
-import weeklyFocusRoute from './routes/insights/getWeeklyData';
-import monthlySummaryRoute from './routes/insights/getMonthlyData';
 import updateProfileRoute from './routes/user/updateProfile';
 import getUserProfileRoute from './routes/user/getGlobalState';
 import getFriendsRoute from './routes/friends/getFriends';
@@ -25,9 +23,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/focus', focusRoutes);
-
-app.use('/api/get_weekly_data', weeklyFocusRoute);
-app.use('/api/get_monthly_data', monthlySummaryRoute);
 
 app.use('/api/user', updateProfileRoute);
 app.use('/api/user', getUserProfileRoute);
