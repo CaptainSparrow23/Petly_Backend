@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import postFocusSession from './routes/focus/postFocusSession';
@@ -16,6 +16,8 @@ import purchasePetRoute from './routes/store/purchasePet';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getTodayFocus from './routes/insights/getTodayFocus';
+import { startDailyFocusCron } from './cron/computeDailyFocus';
+import { focusWeekRouter } from './routes/insights/getWeekFocus';
 
 dotenv.config();
 const app = express();
@@ -26,8 +28,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/post_focus_session", postFocusSession);
 
+//insights page
 app.use('/api/get_streak', getStreak);
 app.use('/api/get_today_focus', getTodayFocus);
+app.use('/api/get_week_focus', focusWeekRouter);
 
 app.use('/api/get_friends', getFriendsRoute);
 app.use('/api/search_friends', searchFriendsRoute);
@@ -45,10 +49,7 @@ app.use('/api/store', purchasePetRoute);
 
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
 
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK', message: 'Petly Backend is running' });
-});
+startDailyFocusCron();
 
 // Start server
 app.listen(PORT, () => {
