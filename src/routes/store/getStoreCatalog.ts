@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { petCatalog } from '../../../data/petCatalog';
+import { petCatalog } from '../../data/petCatalog';
 
 const router = Router();
 

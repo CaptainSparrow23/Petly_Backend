@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
-import { petCatalog } from '../../../data/petCatalog';
+import { petCatalog } from '../../data/petCatalog';
 
 const router = Router();
 
