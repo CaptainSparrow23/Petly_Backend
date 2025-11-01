@@ -41,6 +41,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
     qEndSnap.forEach((d) => docsMap.set(d.id, d));
 
     let totalStudySecToday = 0;
+    const secByHour = Array(24).fill(0) as number[];
 
     for (const d of docsMap.values()) {
       const data: any = d.data();
@@ -53,25 +54,27 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
       if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
 
-      // overlap with today
-      const overlapMs = Math.max(
-        0,
-        Math.min(end.getTime(), startOfTomorrowUTC.getTime()) -
-          Math.max(start.getTime(), startOfTodayUTC.getTime())
-      );
+      // Clamp to today's window
+      let s = new Date(Math.max(start.getTime(), startOfTodayUTC.getTime()));
+      const e = new Date(Math.min(end.getTime(), startOfTomorrowUTC.getTime()));
+      if (e <= s) continue;
 
-      if (overlapMs <= 0) continue;
+      // Calculate total for the session
+      const sessionSec = Math.floor((e.getTime() - s.getTime()) / 1000);
+      totalStudySecToday += sessionSec;
 
-      const overlapSec = Math.floor(overlapMs / 1000);
-      const declaredSec = Number.isFinite(data.durationSec)
-        ? Math.max(0, Math.floor(data.durationSec))
-        : null;
-
-      // prefer declared duration, capped by overlap
-      totalStudySecToday += declaredSec == null ? overlapSec : Math.min(overlapSec, declaredSec);
+      // Distribute across hour buckets
+      while (s < e) {
+        const hourIdx = s.getUTCHours(); // UTC hours
+        const nextHour = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate(), s.getUTCHours() + 1));
+        const chunkEnd = e < nextHour ? e : nextHour;
+        secByHour[hourIdx] += Math.max(0, Math.floor((chunkEnd.getTime() - s.getTime()) / 1000));
+        s = chunkEnd;
+      }
     }
 
     const timeActiveToday = totalStudySecToday; // now in seconds (not minutes)
+    const minutesByHour = secByHour.map(sec => Math.floor(sec / 60));
 
     const profileData = {
       userId,
@@ -81,6 +84,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       email: userData?.email ?? null,
       profileId: userData?.profileId ?? null,
       timeActiveToday, // in seconds
+      minutesByHour, // 24-element array for today's 3-hour interval chart
       coins: userData?.coins ?? 0,
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
