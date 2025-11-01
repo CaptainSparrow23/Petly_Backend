@@ -14,7 +14,8 @@ import saveUserInfoRoute from './routes/user/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
 import purchasePetRoute from './routes/store/purchasePet';
 import getStreak from './routes/insights/checkAndGetStreak';
-import getTodayFocus from './routes/insights/getTodayFocus';
+import getGoals from './routes/insights/getGoals';
+import updateGoals from './routes/insights/updateGoals';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
@@ -32,8 +33,9 @@ app.use("/api/post_focus_session", postFocusSession);
 
 //insights page
 app.use('/api/get_streak', getStreak);
-app.use('/api/get_today_focus', getTodayFocus);
 app.use('/api/get_week_focus', focusWeekRouter);
+app.use('/api/get_goals', getGoals);
+app.use('/api/update_goals', updateGoals);
 
 app.use('/api/get_friends', getFriendsRoute);
 app.use('/api/search_friends', searchFriendsRoute);
