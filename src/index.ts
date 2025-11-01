@@ -17,7 +17,7 @@ import getStreak from './routes/insights/checkAndGetStreak';
 import getTodayFocus from './routes/insights/getTodayFocus';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
-import { startWeeklyFocusCron } from './cron/computeMonthlyFocus';
+import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
 
 dotenv.config();
 const app = express();

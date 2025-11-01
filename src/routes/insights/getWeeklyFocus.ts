@@ -5,7 +5,7 @@ import { DateTime } from "luxon";
 const db = admin.firestore();
 export const focusWeekRouter = Router();
 
-function weekDocIdFromLuxon(dt: DateTime) {
+function weekDocIdFromLuxon(dt: any) {
   // ISO week id: "YYYY-Www"
   const y = dt.weekYear;
   const w = String(dt.weekNumber).padStart(2, "0");
@@ -18,7 +18,7 @@ function ordinal(n: number) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function firstDayLabel(dt: DateTime) {
+function firstDayLabel(dt: any) {
   return `${ordinal(dt.day)} ${MONTHS_SHORT[dt.month - 1]}`; // e.g. "6th Jun"
 }
 
@@ -28,9 +28,10 @@ focusWeekRouter.get("/:userId", async (req: Request, res: Response) => {
     const tz = (req.query.tz as string) || "Europe/London";
     if (!userId) return res.status(400).json({ success: false, error: "Missing userId" });
 
+    // force ISO Monday week by using .startOf('week') on an ISO calendar
     const now = DateTime.now().setZone(tz);
-    const weekStart = now.startOf("week"); // Monday (ISO)
-    const weekDays: DateTime[] = Array.from({ length: 7 }, (_, i) => weekStart.plus({ days: i }));
+    const weekStart = now.startOf("week");
+    const weekDays = Array.from({ length: 7 }, (_, i) => weekStart.plus({ days: i }));
 
     // ---- Part 1: current week daily bars
     const results: { date: string; label: string; totalMinutes: number }[] = [];
