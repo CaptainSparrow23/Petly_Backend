@@ -18,6 +18,8 @@ import getTodayFocus from './routes/insights/getTodayFocus';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
+import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
+import getOwnedPetsRoute from './routes/pets/getOwnedPets';
 
 dotenv.config();
 const app = express();
@@ -46,6 +48,9 @@ app.use('/api/auth', saveUserInfoRoute);
 
 app.use('/api/store', storeCatalogRoute);
 app.use('/api/store', purchasePetRoute);
+
+app.use('/api/pets/update_pet', updateSelectedPetRoute);
+app.use('/api/pets', getOwnedPetsRoute);
 
 startDailyFocusCron();
 startWeeklyFocusCron();
