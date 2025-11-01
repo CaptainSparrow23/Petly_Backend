@@ -13,11 +13,11 @@ import checkUserStatusRoute from './routes/user/checkUserStatus';
 import saveUserInfoRoute from './routes/user/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
 import purchasePetRoute from './routes/store/purchasePet';
-import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getTodayFocus from './routes/insights/getTodayFocus';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
-import { focusWeekRouter } from './routes/insights/getWeekFocus';
+import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
+import { startWeeklyFocusCron } from './cron/computeMonthlyFocus';
 
 dotenv.config();
 const app = express();
@@ -47,9 +47,8 @@ app.use('/api/auth', saveUserInfoRoute);
 app.use('/api/store', storeCatalogRoute);
 app.use('/api/store', purchasePetRoute);
 
-app.use('/api/pets/update_pet', updateSelectedPetRoute);
-
 startDailyFocusCron();
+startWeeklyFocusCron();
 
 // Start server
 app.listen(PORT, () => {
