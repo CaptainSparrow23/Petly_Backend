@@ -22,6 +22,8 @@ import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import getOwnedPetsRoute from './routes/pets/getOwnedPets';
 
+import google from './routes/user/signIn'
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,6 +55,8 @@ app.use('/api/store', purchasePetRoute);
 
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
 app.use('/api/pets', getOwnedPetsRoute);
+
+app.use('/api/google', google)
 
 startDailyFocusCron();
 startWeeklyFocusCron();
