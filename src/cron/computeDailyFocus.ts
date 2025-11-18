@@ -50,7 +50,7 @@ export async function computeDailyFocusForAllUsers(targetDayUTC?: Date) {
 
         snap.forEach((doc) => {
           const d = doc.data() as any;
-          if (d.activity === "Study") {
+          if (d.activity === "Focus" || d.activity === "Rest") {
             total += Number(d.durationSec || 0);
             sessions += 1;
           }
