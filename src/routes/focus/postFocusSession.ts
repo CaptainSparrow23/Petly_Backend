@@ -7,18 +7,13 @@ const router = Router();
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { userId, activity, startTs, durationSec } = req.body || {};
+    const { userId, activity, durationSec } = req.body || {};
 
-    if (!userId || !activity || !startTs || durationSec == null) {
+    if (!userId || !activity || durationSec == null) {
       return res.status(400).json({
         success: false,
-        error: "userId, activity, startTs, durationSec are required",
+        error: "userId, activity, durationSec are required",
       });
-    }
-
-    const start = new Date(startTs);
-    if (isNaN(start.getTime())) {
-      return res.status(400).json({ success: false, error: "Invalid startTs" });
     }
 
     const dur = Number(durationSec);
@@ -29,6 +24,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     const end = new Date(); // end time = now (server)
+    const start = new Date(end.getTime() - Math.floor(dur) * 1000); // derive start from duration
 
     // 1) Write the focus session (unchanged: only the 4 fields)
     const sessionDoc = {

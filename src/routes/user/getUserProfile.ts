@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
+import { DateTime } from 'luxon';
 
 const router = Router();
 
 router.get('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
+  const tz = (req.query.tz as string) || 'Europe/London'; // Accept timezone from query, default to London
+  
   if (!userId) {
     return res.status(400).json({ success: false, error: 'Missing required parameter: userId' });
   }
@@ -22,17 +25,19 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
     const userData = userSnap.data();
 
-    // Calculate today (UTC)
-    const now = new Date();
-    const startOfTodayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const startOfTomorrowUTC = new Date(startOfTodayUTC.getTime() + 24 * 60 * 60 * 1000);
+    // Calculate today using the user's timezone (not UTC)
+    const now = DateTime.now().setZone(tz);
+    const startOfTodayLocal = now.startOf('day').toJSDate();
+    const startOfTomorrowLocal = now.plus({ days: 1 }).startOf('day').toJSDate();
+
+    console.log(`📅 User TZ: ${tz}, Today range: ${startOfTodayLocal.toISOString()} to ${startOfTomorrowLocal.toISOString()}`);
 
     const focusCol = userRef.collection('focus');
 
     // Query only today's sessions
     const [qStartSnap, qEndSnap] = await Promise.all([
-      focusCol.where('startTs', '>=', startOfTodayUTC).where('startTs', '<', startOfTomorrowUTC).get(),
-      focusCol.where('endTs', '>=', startOfTodayUTC).where('endTs', '<', startOfTomorrowUTC).get(),
+      focusCol.where('startTs', '>=', startOfTodayLocal).where('startTs', '<', startOfTomorrowLocal).get(),
+      focusCol.where('endTs', '>=', startOfTodayLocal).where('endTs', '<', startOfTomorrowLocal).get(),
     ]);
 
     // Merge both result sets
@@ -40,12 +45,12 @@ router.get('/:userId', async (req: Request, res: Response) => {
     qStartSnap.forEach((d) => docsMap.set(d.id, d));
     qEndSnap.forEach((d) => docsMap.set(d.id, d));
 
-    let totalStudySecToday = 0;
+    let totalFocusSecToday = 0;
     const secByHour = Array(24).fill(0) as number[];
 
     for (const d of docsMap.values()) {
       const data: any = d.data();
-      if (data?.activity !== 'Study') continue;
+      if (data?.activity !== 'Focus' && data?.activity !== 'Rest') continue;
 
       const start: Date =
         typeof data.startTs?.toDate === 'function' ? data.startTs.toDate() : new Date(data.startTs);
@@ -55,25 +60,26 @@ router.get('/:userId', async (req: Request, res: Response) => {
       if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
 
       // Clamp to today's window
-      let s = new Date(Math.max(start.getTime(), startOfTodayUTC.getTime()));
-      const e = new Date(Math.min(end.getTime(), startOfTomorrowUTC.getTime()));
+      let s = new Date(Math.max(start.getTime(), startOfTodayLocal.getTime()));
+      const e = new Date(Math.min(end.getTime(), startOfTomorrowLocal.getTime()));
       if (e <= s) continue;
 
       // Calculate total for the session
       const sessionSec = Math.floor((e.getTime() - s.getTime()) / 1000);
-      totalStudySecToday += sessionSec;
+      totalFocusSecToday += sessionSec;
 
-      // Distribute across hour buckets
+      // Distribute across hour buckets (using the user's timezone for hour extraction)
       while (s < e) {
-        const hourIdx = s.getUTCHours(); // UTC hours
-        const nextHour = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate(), s.getUTCHours() + 1));
+        const sLuxon = DateTime.fromJSDate(s).setZone(tz);
+        const hourIdx = sLuxon.hour;
+        const nextHour = sLuxon.plus({ hours: 1 }).startOf('hour').toJSDate();
         const chunkEnd = e < nextHour ? e : nextHour;
         secByHour[hourIdx] += Math.max(0, Math.floor((chunkEnd.getTime() - s.getTime()) / 1000));
         s = chunkEnd;
       }
     }
 
-    const timeActiveToday = totalStudySecToday; // now in seconds (not minutes)
+    const timeActiveToday = totalFocusSecToday; // now in seconds (not minutes)
     const minutesByHour = secByHour.map(sec => Math.floor(sec / 60));
 
     const profileData = {
@@ -84,7 +90,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       email: userData?.email ?? null,
       profileId: userData?.profileId ?? null,
       timeActiveToday, // in seconds
-      minutesByHour, // 24-element array for today's 3-hour interval chart
+      minutesByHour, // 24-element array for today's hourly breakdown
       coins: userData?.coins ?? 0,
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
