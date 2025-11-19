@@ -16,22 +16,15 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const userRef = db.collection('users').doc(userId);
     const userSnap = await userRef.get();
 
-    let userData = userSnap.data();
     if (!userSnap.exists) {
-      const defaultProfile = {
-        userId,
-        username: null,
-        displayName: null,
-        email: null,
-        profileId: null,
-        selectedPet: 'pet_skye',
-        coins: 0,
-        ownedPets: ['pet_skye'],
-        createdAt: new Date(),
-      };
-      await userRef.set(defaultProfile, { merge: true });
-      userData = defaultProfile;
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        message: 'No profile exists for this user',
+      });
     }
+
+    const userData = userSnap.data();
 
     // Calculate today using the user's timezone (not UTC)
     const now = DateTime.now().setZone(tz);
