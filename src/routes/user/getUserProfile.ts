@@ -4,6 +4,12 @@ import { DateTime } from 'luxon';
 
 const router = Router();
 
+const toNumber = (value: unknown, fallback = 0) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const parsed = typeof value === 'string' ? Number(value) : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 router.get('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
   const tz = (req.query.tz as string) || 'Europe/London'; // Accept timezone from query, default to London
@@ -89,13 +95,16 @@ router.get('/:userId', async (req: Request, res: Response) => {
       displayName: userData?.displayName ?? null,
       selectedPet: userData?.selectedPet ?? 'pet_skye',
       email: userData?.email ?? null,
-      profileId: userData?.profileId ?? null,
+      profileId: typeof userData?.profileId === 'number' ? userData?.profileId : Number(userData?.profileId) || null,
       timeActiveToday, // in seconds
       minutesByHour, // 24-element array for today's hourly breakdown
-      coins: userData?.coins ?? 0,
+      coins: toNumber(userData?.coins),
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
         : ['pet_skye'],
+      dailyStreak: toNumber(userData?.dailyStreak),
+      highestStreak: toNumber(userData?.highestStreak),
+      totalFocusSeconds: toNumber(userData?.totalFocusSeconds),
     };
 
     return res
