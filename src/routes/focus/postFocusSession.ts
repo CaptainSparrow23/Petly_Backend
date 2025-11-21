@@ -17,7 +17,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     const dur = Number(durationSec);
-    if (!Number.isFinite(dur) || dur <= 0) {
+    if (!Number.isFinite(dur) || dur <= -1) {
       return res
         .status(400)
         .json({ success: false, error: "durationSec must be a positive number" });
@@ -51,6 +51,7 @@ router.post("/", async (req: Request, res: Response) => {
       const data = snap.exists ? snap.data() : undefined;
 
       const prevStreak = Number.isFinite(data?.dailyStreak) ? Number(data!.dailyStreak) : 0;
+      const prevHighest = Number.isFinite(data?.highestStreak) ? Number(data!.highestStreak) : 0;
 
       const lastUpdRaw = data?.lastUpdatedDailyStreak as
         | FirebaseFirestore.Timestamp
@@ -81,7 +82,9 @@ router.post("/", async (req: Request, res: Response) => {
         userRef,
         {
           dailyStreak: newStreak,
+          highestStreak: Math.max(newStreak, prevHighest),
           lastUpdatedDailyStreak: admin.firestore.Timestamp.fromDate(now),
+          totalFocusSeconds: admin.firestore.FieldValue.increment(Math.floor(dur)),
         },
         { merge: true }
       );
