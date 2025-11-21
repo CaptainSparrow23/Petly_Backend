@@ -17,7 +17,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     const dur = Number(durationSec);
-    if (!Number.isFinite(dur) || dur <= -1) {
+    if (!Number.isFinite(dur) || dur < 0) {
       return res
         .status(400)
         .json({ success: false, error: "durationSec must be a positive number" });
