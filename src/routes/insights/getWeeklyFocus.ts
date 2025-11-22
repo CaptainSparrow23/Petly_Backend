@@ -5,23 +5,6 @@ import { DateTime } from "luxon";
 const db = admin.firestore();
 export const focusWeekRouter = Router();
 
-function weekDocIdFromLuxon(dt: any) {
-  // ISO week id: "YYYY-Www"
-  const y = dt.weekYear;
-  const w = String(dt.weekNumber).padStart(2, "0");
-  return `${y}-W${w}`;
-}
-
-// --- Month/label helpers (force 3-letter months; Sep not Sept) ---
-function ordinal(n: number) {
-  const s = ["th", "st", "nd", "rd"], v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function firstDayLabel(dt: any) {
-  return `${ordinal(dt.day)} ${MONTHS_SHORT[dt.month - 1]}`; // e.g. "6th Jun"
-}
-
 focusWeekRouter.get("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -80,57 +63,8 @@ focusWeekRouter.get("/:userId", async (req: Request, res: Response) => {
       }
     }
 
-    // ---- Part 2: six-week summary (5 prior full weeks + current partial week)
-    const sixWeekSummary: {
-      weekId: string;
-      start: string;
-      end: string;
-      totalMinutes: number;
-      sessionsCount: number;
-      isCurrentWeek?: boolean;
-      label: string; // "6th Jun"
-    }[] = [];
-
-    // 5 prior completed weeks
-    for (let i = 5; i >= 1; i--) {
-      const wStart = weekStart.minus({ weeks: i });
-      const wEnd = wStart.endOf("week");
-      const weekId = weekDocIdFromLuxon(wStart);
-
-      const weeklyDoc = await db
-        .collection("users")
-        .doc(userId)
-        .collection("weeklyFocus")
-        .doc(weekId)
-        .get();
-
-      const totalSec = weeklyDoc.exists ? Number(weeklyDoc.data()?.totalDurationSec || 0) : 0;
-      const sessionsCount = weeklyDoc.exists ? Number(weeklyDoc.data()?.sessionsCount || 0) : 0;
-
-      sixWeekSummary.push({
-        weekId,
-        start: wStart.toISODate()!,
-        end: wEnd.toISODate()!,
-        totalMinutes: Math.floor(totalSec / 60),
-        sessionsCount,
-        label: firstDayLabel(wStart),
-      });
-    }
-
     // Current week (partial) from daily bars
     const currentWeekMinutes = results.reduce((s, d) => s + (d.totalMinutes || 0), 0);
-    const currentWeekSessions = 0; // optional: compute by querying "focus" across week window
-    const currentWeekId = weekDocIdFromLuxon(weekStart);
-
-    sixWeekSummary.push({
-      weekId: currentWeekId,
-      start: weekStart.toISODate()!,
-      end: weekStart.endOf("week").toISODate()!,
-      totalMinutes: currentWeekMinutes,
-      sessionsCount: currentWeekSessions,
-      isCurrentWeek: true,
-      label: firstDayLabel(weekStart),
-    });
 
     return res.json({
       success: true,
@@ -138,7 +72,6 @@ focusWeekRouter.get("/:userId", async (req: Request, res: Response) => {
         tz,
         weekStart: weekStart.toISODate(),
         days: results,
-        sixWeekSummary,
         currentWeekTotal: currentWeekMinutes, // Add this for weekly goal calculation
       },
     });

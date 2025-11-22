@@ -19,7 +19,6 @@ import updateGoals from './routes/insights/updateGoals';
 import focusRangeRouter from './routes/insights/getFocusRange';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
-import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import getOwnedPetsRoute from './routes/pets/getOwnedPets';
 
@@ -57,7 +56,6 @@ app.use('/api/pets/update_pet', updateSelectedPetRoute);
 app.use('/api/pets', getOwnedPetsRoute);
 
 startDailyFocusCron();
-startWeeklyFocusCron();
 
 // Start server
 app.listen(PORT, () => {
