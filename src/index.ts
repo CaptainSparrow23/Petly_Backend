@@ -16,6 +16,7 @@ import purchasePetRoute from './routes/store/purchasePet';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getGoals from './routes/insights/getGoals';
 import updateGoals from './routes/insights/updateGoals';
+import focusRangeRouter from './routes/insights/getFocusRange';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import { startWeeklyFocusCron } from './cron/computeWeeklyFocus';
@@ -36,6 +37,7 @@ app.use('/api/get_streak', getStreak);
 app.use('/api/get_week_focus', focusWeekRouter);
 app.use('/api/get_goals', getGoals);
 app.use('/api/update_goals', updateGoals);
+app.use('/api/get_focus_range', focusRangeRouter);
 
 app.use('/api/get_friends', getFriendsRoute);
 app.use('/api/search_friends', searchFriendsRoute);
