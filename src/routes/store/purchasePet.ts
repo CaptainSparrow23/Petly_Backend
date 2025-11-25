@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
-import { petCatalog } from '../../data/petCatalog';
+import { storeCatalog } from '../../data/storeCatalog';
 
 const router = Router();
 
@@ -30,7 +30,7 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
 
   // Look up the pet details in the pets catalog backend file so we know expected pricing.
   // Maybe should change this to read from Firestore instead ?
-  const catalogEntry = petCatalog.find((entry) => entry.id === petId);
+  const catalogEntry = storeCatalog.find((entry) => entry.id === petId);
   if (!catalogEntry) {
     return res.status(404).json({
       success: false,
