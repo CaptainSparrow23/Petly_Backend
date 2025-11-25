@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import petDataJson from '../../data/petData.json';
+import storeCatalogJson from '../../data/storeCatalog.json';
 
 const router = Router();
 
-interface PetData {
+interface StoreItem {
   id: string;
   name: string;
-  species: string;
+  category: string;
   priceCoins: number;
   imageKey: string;
   description: string;
@@ -25,16 +25,16 @@ router.post('/owned', async (req: Request, res: Response) => {
   }
 
   try {
-    const petData = petDataJson as PetData[];
+    const catalog = storeCatalogJson as StoreItem[];
     
     // Filter pet data to only include pets owned by the user
-    const ownedPetsData = petData.filter(pet => ownedPets.includes(pet.id));
+    const ownedPetsData = catalog.filter(item => ownedPets.includes(item.id) && item.category === 'Pet');
 
     // Transform the data to include proper structure for frontend
     const transformedPets = ownedPetsData.map(pet => ({
       id: pet.id,
       name: pet.name,
-      type: pet.species,
+      type: 'pet',
       rating: 3, // Default rating for all pets
       image: 'skye', // Using skye as default image key as per instructions
     }));

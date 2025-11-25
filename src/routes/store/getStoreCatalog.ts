@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { petCatalog } from '../../data/petCatalog';
+import { storeCatalog } from '../../data/storeCatalog';
 
 const router = Router();
 
@@ -7,7 +7,7 @@ router.get('/catalog', (_req: Request, res: Response) => {
   try {
     res.status(200).json({
       success: true,
-      data: petCatalog,
+      data: storeCatalog,
       message: 'Store catalog retrieved successfully',
     });
   } catch (error) {
