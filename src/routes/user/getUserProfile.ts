@@ -31,6 +31,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
     }
 
     const userData = userSnap.data();
+    console.log(`[getUserProfile] Read user ${userId}. selectedPet: ${userData?.selectedPet}`);
 
     // Calculate today using the user's timezone (not UTC)
     const now = DateTime.now().setZone(tz);

@@ -50,6 +50,8 @@ router.post("/", async (req: Request, res: Response) => {
       const snap = await tx.get(userRef);
       const data = snap.exists ? snap.data() : undefined;
 
+      console.log(`[postFocusSession] Transaction read user ${userId}. selectedPet: ${data?.selectedPet}`);
+
       const prevStreak = Number.isFinite(data?.dailyStreak) ? Number(data!.dailyStreak) : 0;
       const prevHighest = Number.isFinite(data?.highestStreak) ? Number(data!.highestStreak) : 0;
 

@@ -46,6 +46,11 @@ router.put('/:userId', async (req: Request, res: Response) => {
 
     console.log(`✅ Updated selected pet for user ${userId} to ${normalizedPetId}`);
 
+    // Verify the update immediately
+    const verifySnap = await userDocRef.get();
+    const verifyData = verifySnap.data();
+    console.log(`🔍 Verification: selectedPet is now ${verifyData?.selectedPet}`);
+
     return res.status(200).json({
       success: true,
       message: 'Selected pet updated successfully',
