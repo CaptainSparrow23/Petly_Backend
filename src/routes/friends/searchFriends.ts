@@ -29,7 +29,16 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
     // Get current user's friends list to exclude from search
     const userDoc = await db.collection('users').doc(userId).get();
-    const currentUserFriends = userDoc.exists ? (userDoc.data()?.friends || []) : [];
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const currentUserFriends = Array.isArray(userData?.friends) ? (userData.friends as string[]) : [];
+    const currentUserRequested = Array.isArray(userData?.requested) ? (userData.requested as string[]) : [];
+    const currentUserRequests = Array.isArray(userData?.requests) ? (userData.requests as string[]) : [];
+    const excludedIds = new Set<string>([
+      userId,
+      ...currentUserFriends,
+      ...currentUserRequested,
+      ...currentUserRequests,
+    ]);
 
     // Search users by username only
     const usersCollection = db.collection('users');
@@ -44,7 +53,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       const docId = doc.id;
       
       // Exclude current user and existing friends
-      if (docId !== userId && !currentUserFriends.includes(docId)) {
+      if (!excludedIds.has(docId)) {
         const username = (userData.username || '').toLowerCase();
         
         // Check if username contains the search term (case-insensitive partial match)
