@@ -8,6 +8,8 @@ import getFriendsRoute from './routes/friends/getFriends';
 import searchFriendsRoute from './routes/friends/searchFriends';
 import addFriendRoute from './routes/friends/addFriend';
 import removeFriendRoute from './routes/friends/removeFriend';
+import requestFriendRoute from './routes/friends/requestFriend';
+import respondFriendRoute from './routes/friends/respondFriendRequest';
 import setupProfileRoute from './routes/user/setupProfile';
 import checkUserStatusRoute from './routes/user/checkUserStatus';
 import saveUserInfoRoute from './routes/user/saveUserInfo';
@@ -42,6 +44,8 @@ app.use('/api/get_friends', getFriendsRoute);
 app.use('/api/search_friends', searchFriendsRoute);
 app.use('/api/friends', addFriendRoute);
 app.use('/api/friends', removeFriendRoute);
+app.use('/api/friends', requestFriendRoute);
+app.use('/api/friends', respondFriendRoute);
 
 app.use('/api/user', updateProfileRoute);
 app.use('/api/get_user_profile', getUserProfileRoute);

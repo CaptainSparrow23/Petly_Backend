@@ -27,17 +27,24 @@ router.get('/:userId', async (req: Request, res: Response) => {
     }
 
     const userData = userDoc.data();
-    const friendIds = userData?.friends || [];
+    const friendIds = Array.isArray(userData?.friends) ? userData?.friends : [];
+    const requestIds = Array.isArray(userData?.requests) ? userData?.requests : [];
 
-    if (friendIds.length === 0) {
-      return res.json({ 
-        success: true, 
-        data: { friends: [] } 
-      });
-    }
+    const friendsData = [] as Array<{
+      username: string | null;
+      displayName: string;
+      profileId: number | null;
+      userId: string;
+      timeActiveToday: number;
+    }>;
 
-    // Get friend details for each friend ID
-    const friendsData = [];
+    const requestsData = [] as Array<{
+      username: string | null;
+      displayName: string;
+      profileId: number | null;
+      userId: string;
+      email: string | null;
+    }>;
 
     const today = new Date();
     const todayKey = today.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD in local timezone
@@ -80,9 +87,27 @@ router.get('/:userId', async (req: Request, res: Response) => {
     // Sort friends by time active today (descending)
     friendsData.sort((a, b) => b.timeActiveToday - a.timeActiveToday);
 
+    if (requestIds.length > 0) {
+      for (const requesterId of requestIds) {
+        const requesterDoc = await db.collection('users').doc(requesterId).get();
+        if (!requesterDoc.exists) {
+          continue;
+        }
+
+        const requesterData = requesterDoc.data();
+        requestsData.push({
+          username: requesterData?.username || null,
+          displayName: requesterData?.displayName || requesterData?.name || 'Petly Explorer',
+          profileId: typeof requesterData?.profileId === 'number' ? requesterData.profileId : null,
+          userId: requesterId,
+          email: requesterData?.email || null,
+        });
+      }
+    }
+
     return res.json({ 
       success: true, 
-      data: { friends: friendsData } 
+      data: { friends: friendsData, requests: requestsData } 
     });
 
   } catch (error) {
