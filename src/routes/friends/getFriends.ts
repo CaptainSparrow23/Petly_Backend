@@ -47,7 +47,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
     }>;
 
     const today = new Date();
-    const todayKey = today.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD in local timezone
+    const todayKey = today.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD
 
     for (const friendId of friendIds) {
       const friendDoc = await db.collection('users').doc(friendId).get();
@@ -58,20 +58,22 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
       const friendData = friendDoc.data();
 
-      // Get today's focus time from the focus subcollection
+      // Get today's focus time from the dailyFocus subcollection
       const todayFocusDoc = await db
         .collection('users')
         .doc(friendId)
-        .collection('focus')
+        .collection('dailyFocus')
         .doc(todayKey)
         .get();
 
       let timeActiveToday = 0;
       if (todayFocusDoc.exists) {
         const focusData = todayFocusDoc.data();
-        timeActiveToday = typeof focusData?.totalMinutes === 'number' 
-          ? focusData.totalMinutes 
+        // dailyFocus stores totalDurationSec, convert to minutes
+        const totalSec = typeof focusData?.totalDurationSec === 'number' 
+          ? focusData.totalDurationSec 
           : 0;
+        timeActiveToday = Math.floor(totalSec / 60);
       }
       console.log(`Friend ${friendId} - Time active today: ${timeActiveToday} minutes`);
 

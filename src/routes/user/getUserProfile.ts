@@ -110,6 +110,8 @@ router.get('/:userId', async (req: Request, res: Response) => {
       dailyStreak: toNumber(userData?.dailyStreak),
       highestStreak: toNumber(userData?.highestStreak),
       totalFocusSeconds: toNumber(userData?.totalFocusSeconds),
+      lastDailyGoalClaim: userData?.lastDailyGoalClaim ?? null,
+      lastWeeklyGoalClaim: userData?.lastWeeklyGoalClaim ?? null,
     };
 
     return res
