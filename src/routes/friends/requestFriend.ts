@@ -40,6 +40,18 @@ router.post('/request', async (req: Request, res: Response) => {
     const userData = userDoc.data();
     const friendData = friendDoc.data();
 
+    const friendAllowsRequests =
+      typeof friendData?.allowFriendRequests === 'boolean'
+        ? friendData.allowFriendRequests
+        : true;
+
+    if (!friendAllowsRequests) {
+      return res.status(403).json({
+        success: false,
+        error: 'This user does not allow friend requests.',
+      });
+    }
+
     const userFriends = getArrayField(userData?.friends);
     const userRequested = getArrayField(userData?.requested);
     const userRequests = getArrayField(userData?.requests);
