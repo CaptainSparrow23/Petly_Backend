@@ -36,8 +36,6 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const excludedIds = new Set<string>([
       userId,
       ...currentUserFriends,
-      ...currentUserRequested,
-      ...currentUserRequests,
     ]);
 
     // Search users by username only
@@ -55,6 +53,8 @@ router.get('/:userId', async (req: Request, res: Response) => {
       // Exclude current user and existing friends
       if (!excludedIds.has(docId)) {
         const username = (userData.username || '').toLowerCase();
+        const alreadyRequested = currentUserRequested.includes(docId);
+        const hasRequestedYou = currentUserRequests.includes(docId);
         
         // Check if username contains the search term (case-insensitive partial match)
         if (username.includes(searchTerm)) {
@@ -65,6 +65,8 @@ router.get('/:userId', async (req: Request, res: Response) => {
             email: userData.email || '',
             profileId: userData.profileId || null,
             isFriend: false,
+            requestedByYou: alreadyRequested,
+            requestedYou: hasRequestedYou,
           });
         }
       }
