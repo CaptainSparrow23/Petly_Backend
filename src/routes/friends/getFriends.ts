@@ -46,8 +46,11 @@ router.get('/:userId', async (req: Request, res: Response) => {
       email: string | null;
     }>;
 
-    const today = new Date();
-    const todayKey = today.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD
+    // Calculate today's time range (UTC)
+    const now = new Date();
+    const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const startTs = admin.firestore.Timestamp.fromDate(startOfToday);
+    const endTs = admin.firestore.Timestamp.fromDate(now);
 
     for (const friendId of friendIds) {
       const friendDoc = await db.collection('users').doc(friendId).get();
@@ -58,23 +61,24 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
       const friendData = friendDoc.data();
 
-      // Get today's focus time from the dailyFocus subcollection
-      const todayFocusDoc = await db
+      // Query today's live focus sessions directly
+      const focusSnap = await db
         .collection('users')
         .doc(friendId)
-        .collection('dailyFocus')
-        .doc(todayKey)
+        .collection('focus')
+        .where('startTs', '>=', startTs)
+        .where('startTs', '<=', endTs)
         .get();
 
-      let timeActiveToday = 0;
-      if (todayFocusDoc.exists) {
-        const focusData = todayFocusDoc.data();
-        // dailyFocus stores totalDurationSec, convert to minutes
-        const totalSec = typeof focusData?.totalDurationSec === 'number' 
-          ? focusData.totalDurationSec 
-          : 0;
-        timeActiveToday = Math.floor(totalSec / 60);
-      }
+      let totalSec = 0;
+      focusSnap.forEach((doc) => {
+        const data = doc.data();
+        if (data.activity === 'Focus' || data.activity === 'Rest') {
+          totalSec += Number(data.durationSec || 0);
+        }
+      });
+
+      const timeActiveToday = Math.floor(totalSec / 60);
       console.log(`Friend ${friendId} - Time active today: ${timeActiveToday} minutes`);
 
       friendsData.push({
