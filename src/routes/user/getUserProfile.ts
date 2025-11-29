@@ -97,6 +97,10 @@ router.get('/:userId', async (req: Request, res: Response) => {
       selectedPet: userData?.selectedPet ?? 'pet_skye',
       email: userData?.email ?? null,
       profileId: typeof userData?.profileId === 'number' ? userData?.profileId : Number(userData?.profileId) || null,
+      allowFriendRequests:
+        typeof userData?.allowFriendRequests === 'boolean'
+          ? userData.allowFriendRequests
+          : true,
       timeActiveToday, // in seconds
       minutesByHour, // 24-element array for today's hourly breakdown
       coins: toNumber(userData?.coins),

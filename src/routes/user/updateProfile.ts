@@ -9,7 +9,7 @@ const router = Router();
  */
 router.put('/update_profile/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const { username, profileId } = req.body;
+  const { username, profileId, allowFriendRequests } = req.body;
   
   console.log(`📝 Updating profile for user: ${userId}`);
   console.log(`   Username: ${username || 'no change'}`);
@@ -23,10 +23,14 @@ router.put('/update_profile/:userId', async (req: Request, res: Response) => {
   }
 
   // At least one field must be provided
-  if (!username && !profileId) {
+  if (
+    username === undefined &&
+    profileId === undefined &&
+    allowFriendRequests === undefined
+  ) {
     return res.status(400).json({ 
       success: false,
-      error: 'At least one field (username or profileId) must be provided' 
+      error: 'At least one field (username, profileId, or allowFriendRequests) must be provided' 
     });
   }
 
@@ -86,6 +90,16 @@ router.put('/update_profile/:userId', async (req: Request, res: Response) => {
       updateData.profileId = profileId;
     }
 
+    if (allowFriendRequests !== undefined) {
+      if (typeof allowFriendRequests !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: 'allowFriendRequests must be a boolean value',
+        });
+      }
+      updateData.allowFriendRequests = allowFriendRequests;
+    }
+
     // Add updatedAt timestamp
     updateData.updatedAt = new Date().toISOString();
 
@@ -107,6 +121,10 @@ router.put('/update_profile/:userId', async (req: Request, res: Response) => {
         displayName: updatedData?.displayName || null,
         email: updatedData?.email || null,
         profileId: updatedData?.profileId || null,
+        allowFriendRequests:
+          typeof updatedData?.allowFriendRequests === 'boolean'
+            ? updatedData.allowFriendRequests
+            : true,
       }
     });
 
