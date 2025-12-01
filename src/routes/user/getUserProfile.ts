@@ -94,7 +94,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       userId,
       username: userData?.username ?? null,
       displayName: userData?.displayName ?? null,
-      selectedPet: userData?.selectedPet ?? 'pet_skye',
+      selectedPet: userData?.selectedPet ?? 'pet_smurf',
       email: userData?.email ?? null,
       profileId: typeof userData?.profileId === 'number' ? userData?.profileId : Number(userData?.profileId) || null,
       allowFriendRequests:
@@ -106,7 +106,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       coins: toNumber(userData?.coins),
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
-        : ['pet_skye'],
+        : ['pet_smurf'],
       ownedHats: Array.isArray(userData?.ownedHats)
         ? (userData.ownedHats as string[])
         : [],
