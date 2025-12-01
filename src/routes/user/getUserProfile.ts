@@ -107,6 +107,15 @@ router.get('/:userId', async (req: Request, res: Response) => {
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
         : ['pet_skye'],
+      ownedHats: Array.isArray(userData?.ownedHats)
+        ? (userData.ownedHats as string[])
+        : [],
+      ownedCollars: Array.isArray(userData?.ownedCollars)
+        ? (userData.ownedCollars as string[])
+        : [],
+      ownedGadgets: Array.isArray(userData?.ownedGadgets)
+        ? (userData.ownedGadgets as string[])
+        : [],
       dailyStreak: toNumber(userData?.dailyStreak),
       highestStreak: toNumber(userData?.highestStreak),
       totalFocusSeconds: toNumber(userData?.totalFocusSeconds),

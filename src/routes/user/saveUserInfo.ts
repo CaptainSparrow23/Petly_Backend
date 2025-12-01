@@ -58,6 +58,9 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         lastLogin: new Date().toISOString(),
         coins: 100,
         ownedPets: ['pet_skye'],
+        ownedHats: [],
+        ownedCollars: [],
+        ownedGadgets: [],
         selectedPet: 'pet_skye',
       });
 
@@ -72,6 +75,9 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
           displayName: displayName || null,
           coins: 100,
           ownedPets: ['pet_skye'],
+          ownedHats: [],
+          ownedCollars: [],
+          ownedGadgets: [],
           selectedPet: 'pet_skye'
 
         }
