@@ -32,67 +32,67 @@
     "description": "Hypes you up before deadlines and celebrates the finish."
   },
   {
-    "id": "hat_sunrise_cap",
-    "name": "Sunrise Cap",
+    "id": "hat_minty_puff",
+    "name": "Minty Puff",
     "category": "Hat",
     "priceCoins": 240,
-    "imageKey": "hat_sunrise_cap",
+    "imageKey": "hat_minty_puff",
     "description": "Soft brim, warm tones\u2014perfect for morning focus sprints."
   },
   {
-    "id": "hat_mellow_beret",
-    "name": "Mellow Beret",
+    "id": "hat_honey_comb",
+    "name": "Honeycomb",
     "category": "Hat",
     "priceCoins": 260,
-    "imageKey": "hat_mellow_beret",
+    "imageKey": "hat_honey_comb",
     "description": "Adds calm confidence and a touch of creative flair."
   },
   {
-    "id": "hat_starlight_visor",
-    "name": "Starlight Visor",
+    "id": "hat_lilac_berry",
+    "name": "Lilac berry",
     "category": "Hat",
     "priceCoins": 280,
-    "imageKey": "hat_starlight_visor",
+    "imageKey": "hat_lilac_berry",
     "description": "Keeps distractions shaded while your ideas shine."
   },
   {
-    "id": "hat_rally_band",
+    "id": "hat_vanilla",
     "name": "Rally Band",
     "category": "Hat",
     "priceCoins": 220,
-    "imageKey": "hat_rally_band",
+    "imageKey": "hat_vanilla",
     "description": "Lightweight band that says \u201clet\u2019s get this done.\u201d"
   },
   {
-    "id": "collar_bluebell",
+    "id": "collar_minty_puff",
     "name": "Bluebell Collar",
     "category": "Collar",
     "priceCoins": 200,
-    "imageKey": "collar_bluebell",
+    "imageKey": "collar_minty_puff",
     "description": "Cool-toned collar that hums with focus energy."
   },
   {
-    "id": "collar_sunbeam",
+    "id": "collar_honey_comb",
     "name": "Sunbeam Collar",
     "category": "Collar",
     "priceCoins": 200,
-    "imageKey": "collar_sunbeam",
+    "imageKey": "collar_honey_comb",
     "description": "Bright accent that sparks motivation on tough days."
   },
   {
-    "id": "collar_cinder",
+    "id": "collar_lilac_berry",
     "name": "Cinder Collar",
     "category": "Collar",
     "priceCoins": 220,
-    "imageKey": "collar_cinder",
+    "imageKey": "collar_lilac_berry",
     "description": "Sleek charcoal band for a serious, heads-down mood."
   },
   {
-    "id": "collar_meadow",
+    "id": "collar_vanilla",
     "name": "Meadow Collar",
     "category": "Collar",
     "priceCoins": 220,
-    "imageKey": "collar_meadow",
+    "imageKey": "collar_vanilla",
     "description": "Soft greens that keep you grounded and steady."
   },
   {
