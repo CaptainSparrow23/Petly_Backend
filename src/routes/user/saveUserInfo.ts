@@ -60,8 +60,11 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         ownedPets: ['pet_smurf'],
         ownedHats: [],
         ownedCollars: [],
-        ownedGadgets: [],
+        ownedGadgets: ['gadget_laptop'],
         selectedPet: 'pet_smurf',
+        selectedHat: null,
+        selectedCollar: null,
+        selectedGadget: 'gadget_laptop',
       });
 
       console.log(`✅ Created new user document: ${userId} (${email})`);
@@ -77,9 +80,11 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
           ownedPets: ['pet_smurf'],
           ownedHats: [],
           ownedCollars: [],
-          ownedGadgets: [],
-          selectedPet: 'pet_smurf'
-
+          ownedGadgets: ['gadget_laptop'],
+          selectedPet: 'pet_smurf',
+          selectedHat: null,
+          selectedCollar: null,
+          selectedGadget: 'gadget_laptop',
         }
       });
     }

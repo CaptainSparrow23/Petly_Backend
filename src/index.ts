@@ -22,6 +22,7 @@ import claimGoalRewardRoute from './routes/insights/claimGoalReward';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
+import updateSelectedAccessoriesRoute from './routes/pets/updateSelectedAccessories';
 import getOwnedPetsRoute from './routes/pets/getOwnedPets';
 
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/store', storeCatalogRoute);
 app.use('/api/store', purchasePetRoute);
 
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
+app.use('/api/pets/update_accessories', updateSelectedAccessoriesRoute);
 app.use('/api/pets', getOwnedPetsRoute);
 
 startDailyFocusCron();
