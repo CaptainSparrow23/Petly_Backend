@@ -40,11 +40,14 @@ router.put('/:userId', async (req: Request, res: Response) => {
     await userDocRef.set(
       {
         selectedPet: normalizedPetId,
+        selectedHat: null,
+        selectedCollar: null,
+        selectedGadget: 'gadget_laptop',
       },
       { merge: true },
     );
 
-    console.log(`✅ Updated selected pet for user ${userId} to ${normalizedPetId}`);
+    console.log(`✅ Updated selected pet for user ${userId} to ${normalizedPetId} (reset accessories)`);
 
     // Verify the update immediately
     const verifySnap = await userDocRef.get();
