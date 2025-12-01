@@ -115,7 +115,10 @@ router.get('/:userId', async (req: Request, res: Response) => {
         : [],
       ownedGadgets: Array.isArray(userData?.ownedGadgets)
         ? (userData.ownedGadgets as string[])
-        : [],
+        : ['gadget_laptop'],
+      selectedHat: userData?.selectedHat ?? null,
+      selectedCollar: userData?.selectedCollar ?? null,
+      selectedGadget: userData?.selectedGadget ?? 'gadget_laptop',
       dailyStreak: toNumber(userData?.dailyStreak),
       highestStreak: toNumber(userData?.highestStreak),
       totalFocusSeconds: toNumber(userData?.totalFocusSeconds),
