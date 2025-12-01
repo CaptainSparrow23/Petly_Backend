@@ -57,11 +57,11 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
         coins: 100,
-        ownedPets: ['pet_skye'],
+        ownedPets: ['pet_smurf'],
         ownedHats: [],
         ownedCollars: [],
         ownedGadgets: [],
-        selectedPet: 'pet_skye',
+        selectedPet: 'pet_smurf',
       });
 
       console.log(`✅ Created new user document: ${userId} (${email})`);
@@ -74,11 +74,11 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
           email,
           displayName: displayName || null,
           coins: 100,
-          ownedPets: ['pet_skye'],
+          ownedPets: ['pet_smurf'],
           ownedHats: [],
           ownedCollars: [],
           ownedGadgets: [],
-          selectedPet: 'pet_skye'
+          selectedPet: 'pet_smurf'
 
         }
       });
