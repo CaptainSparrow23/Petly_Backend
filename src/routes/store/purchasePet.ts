@@ -9,10 +9,18 @@ interface PurchasePayload {
   priceCoins?: unknown;
 }
 
-// Handles purchasing a pet, deducting coins, and updating the player's collection.
+// Maps category to the Firestore field name for owned items
+const categoryToField: Record<string, string> = {
+  Pet: 'ownedPets',
+  Hat: 'ownedHats',
+  Collar: 'ownedCollars',
+  Gadget: 'ownedGadgets',
+};
+
+// Handles purchasing an item, deducting coins, and updating the player's collection.
 router.post('/purchase/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const { petId, priceCoins }: PurchasePayload = req.body ?? {};
+  const { petId, priceCoins }: PurchasePayload = req.body ?? {}; // petId is legacy name, actually itemId
 
   if (!userId) {
     return res.status(400).json({
@@ -28,13 +36,20 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     });
   }
 
-  // Look up the pet details in the pets catalog backend file so we know expected pricing.
-  // Maybe should change this to read from Firestore instead ?
+  // Look up the item details in the catalog
   const catalogEntry = storeCatalog.find((entry) => entry.id === petId);
   if (!catalogEntry) {
     return res.status(404).json({
       success: false,
-      error: 'Pet not found in catalog',
+      error: 'Item not found in catalog',
+    });
+  }
+
+  const ownedField = categoryToField[catalogEntry.category];
+  if (!ownedField) {
+    return res.status(400).json({
+      success: false,
+      error: 'Unknown item category',
     });
   }
 
@@ -66,17 +81,17 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
       typeof userData.coins === 'number' && Number.isFinite(userData.coins)
         ? userData.coins
         : 0;
-    const ownedPets = Array.isArray(userData.ownedPets)
-      ? (userData.ownedPets as string[])
+    const ownedItems = Array.isArray(userData[ownedField])
+      ? (userData[ownedField] as string[])
       : [];
 
-    if (ownedPets.includes(petId)) {
+    if (ownedItems.includes(petId)) {
       return res.status(200).json({
         success: true,
-        message: 'Pet already owned; no update necessary',
+        message: 'Item already owned; no update necessary',
         data: {
           coins: currentCoins,
-          ownedPets,
+          [ownedField]: ownedItems,
         },
       });
     }
@@ -90,12 +105,12 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
 
     const updatedCoins = currentCoins - expectedPrice;
     // Use a set to avoid duplicates in case of concurrent purchase attempts.
-    const updatedOwnedPets = Array.from(new Set([...ownedPets, petId]));
+    const updatedOwnedItems = Array.from(new Set([...ownedItems, petId]));
 
     await userDocRef.set(
       {
         coins: updatedCoins,
-        ownedPets: updatedOwnedPets,
+        [ownedField]: updatedOwnedItems,
         updatedAt: new Date().toISOString(),
       },
       { merge: true }
@@ -103,10 +118,10 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Pet purchased successfully',
+      message: 'Item purchased successfully',
       data: {
         coins: updatedCoins,
-        ownedPets: updatedOwnedPets,
+        [ownedField]: updatedOwnedItems,
       },
     });
   } catch (error) {

@@ -1,16 +1,7 @@
 import { Router, Request, Response } from 'express';
-import storeCatalogJson from '../../data/storeCatalog.json';
+import { storeCatalog } from '../../data/storeCatalog';
 
 const router = Router();
-
-interface StoreItem {
-  id: string;
-  name: string;
-  category: string;
-  priceCoins: number;
-  imageKey: string;
-  description: string;
-}
 
 router.post('/owned', async (req: Request, res: Response) => {
   const { ownedPets } = req.body;
@@ -25,10 +16,8 @@ router.post('/owned', async (req: Request, res: Response) => {
   }
 
   try {
-    const catalog = storeCatalogJson as StoreItem[];
-    
     // Filter pet data to only include pets owned by the user
-    const ownedPetsData = catalog.filter(item => ownedPets.includes(item.id) && item.category === 'Pet');
+    const ownedPetsData = storeCatalog.filter(item => ownedPets.includes(item.id) && item.category === 'Pet');
 
     // Transform the data to include proper structure for frontend
     const transformedPets = ownedPetsData.map(pet => ({
