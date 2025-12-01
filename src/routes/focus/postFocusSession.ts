@@ -26,12 +26,17 @@ router.post("/", async (req: Request, res: Response) => {
     const end = new Date(); // end time = now (server)
     const start = new Date(end.getTime() - Math.floor(dur) * 1000); // derive start from duration
 
-    // 1) Write the focus session (unchanged: only the 4 fields)
+    // 1) Get user's selected pet before saving session
+    const userSnap = await db.collection("users").doc(userId).get();
+    const selectedPet = userSnap.exists ? userSnap.data()?.selectedPet : null;
+
+    // 2) Write the focus session with selected pet
     const sessionDoc = {
       activity,
       startTs: admin.firestore.Timestamp.fromDate(start),
       endTs: admin.firestore.Timestamp.fromDate(end),
       durationSec: Math.floor(dur),
+      selectedPet: selectedPet || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -41,7 +46,7 @@ router.post("/", async (req: Request, res: Response) => {
       .collection("focus")
       .add(sessionDoc);
 
-    // 2) Update daily streak on the user doc (transactional)
+    // 3) Update daily streak on the user doc (transactional)
     const userRef = db.collection("users").doc(userId);
     const now = new Date();
     const startOfTodayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
