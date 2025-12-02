@@ -40,11 +40,11 @@
     "description": "Soft brim, warm tones\u2014perfect for morning focus sprints."
   },
   {
-    "id": "hat_honey_beanie",
-    "name": "Honey Beanie",
+    "id": "hat_sunset_beanie",
+    "name": "Sunset Beanie",
     "category": "Hat",
     "priceCoins": 260,
-    "imageKey": "hat_honey_beanie",
+    "imageKey": "hat_sunset_beanie",
     "description": "Adds calm confidence and a touch of creative flair."
   },
   {
@@ -56,19 +56,19 @@
     "description": "Keeps distractions shaded while your ideas shine."
   },
   {
-    "id": "hat_vanilla_beanie",
-    "name": "Vanilla Beanie",
+    "id": "hat_snow_beanie",
+    "name": "Snow Beanie",
     "category": "Hat",
     "priceCoins": 220,
-    "imageKey": "hat_vanilla_beanie",
+    "imageKey": "hat_snow_beanie",
     "description": "Lightweight band that says \u201clet\u2019s get this done.\u201d"
   },
   {
-    "id": "collar_icy_scarf",
-    "name": "Icy Scarf",
+    "id": "collar_minty_scarf",
+    "name": "Minty Scarf",
     "category": "Collar",
     "priceCoins": 200,
-    "imageKey": "collar_icy_scarf",
+    "imageKey": "collar_minty_scarf",
     "description": "Cool-toned collar that hums with focus energy."
   },
   {
@@ -80,11 +80,11 @@
     "description": "Bright accent that sparks motivation on tough days."
   },
   {
-    "id": "collar_gooseberry_scarf",
-    "name": "Gooseberry Scarf",
+    "id": "collar_lilac_scarf",
+    "name": "Lilac Scarf",
     "category": "Collar",
     "priceCoins": 220,
-    "imageKey": "collar_gooseberry_scarf",
+    "imageKey": "collar_lilac_scarf",
     "description": "Sleek charcoal band for a serious, heads-down mood."
   },
   {
