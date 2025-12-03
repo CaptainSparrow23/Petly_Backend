@@ -64,6 +64,14 @@
     "description": "Lightweight band that says \u201clet\u2019s get this done.\u201d"
   },
   {
+    "id": "hat_bucket_hat",
+    "name": "Bucket Hat",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_bucket_hat",
+    "description": "Casual hat that adds a laid-back vibe to your focus sessions."
+  },
+  {
     "id": "collar_minty_scarf",
     "name": "Minty Scarf",
     "category": "Collar",
