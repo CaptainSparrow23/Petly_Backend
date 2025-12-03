@@ -126,5 +126,13 @@
     "priceCoins": 320,
     "imageKey": "gadget_laptop",
     "description": "Nothing to see just a 9 year old laptop."
+  },
+  {
+    "id": "face_sun_glasses",
+    "name": "Sunglasses",
+    "category": "Face",
+    "priceCoins": 320,
+    "imageKey": "face_sun_glasses",
+    "description": "Stylish shades to keep your focus cool and collected."
   }
 ]

@@ -1,6 +1,6 @@
 import catalogData from './storeCatalog.json';
 
-export type StoreCategory = 'Pet' | 'Hat' | 'Collar' | 'Gadget';
+export type StoreCategory = 'Pet' | 'Hat' | 'Collar' | 'Gadget' | 'Face';
 
 export interface StoreCatalogEntry {
   id: string;
