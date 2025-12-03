@@ -72,6 +72,14 @@
     "description": "Casual hat that adds a laid-back vibe to your focus sessions."
   },
   {
+    "id": "hat_blue_bucket_hat",
+    "name": "Blue Bucket Hat",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_blue_bucket_hat",
+    "description": "Casual hat that adds a laid-back vibe to your focus sessions."
+  },
+  {
     "id": "collar_minty_scarf",
     "name": "Minty Scarf",
     "category": "Collar",
