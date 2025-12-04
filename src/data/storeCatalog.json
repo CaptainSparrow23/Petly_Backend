@@ -120,6 +120,30 @@
     "description": "Soft greens that keep you grounded and steady."
   },
   {
+    "id": "collar_leather_collar",
+    "name": "Leather Collar",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_leather_collar",
+    "description": "Classic brown leather for a timeless, focused look."
+  },
+  {
+    "id": "collar_ocean_collar",
+    "name": "Ocean Collar",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_ocean_collar",
+    "description": "Deep sea blues that inspire calm and concentration."
+  },
+  {
+    "id": "collar_champion_collar",
+    "name": "Champion Collar",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_champion_collar",
+    "description": "Bold red band to fuel your drive to succeed."
+  },
+  {
     "id": "gadget_focus_beacon",
     "name": "Focus Beacon",
     "category": "Gadget",
