@@ -88,6 +88,22 @@
     "description": "Casual hat that adds a laid-back vibe to your focus sessions."
   },
   {
+    "id": "hat_red_top_hat",
+    "name": "Red Top Hat",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_red_top_hat",
+    "description": "Formal attire with a bit of flair to elevate your focus game."
+  },
+  {
+    "id": "hat_silk_top_hat",
+    "name": "Silk Top Hat",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_silk_top_hat",
+    "description": "Perfect for adding a touch of formality to your focus sessions."
+  },
+  {
     "id": "collar_minty_scarf",
     "name": "Minty Scarf",
     "category": "Collar",
