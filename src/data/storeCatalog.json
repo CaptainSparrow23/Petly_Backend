@@ -160,6 +160,22 @@
     "description": "Bold red band to fuel your drive to succeed."
   },
   {
+    "id": "collar_red_bow_tie",
+    "name": "Red Bow Tie",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_red_bow_tie",
+    "description": "Smart looking red bow tie to add a touch of elegance."
+  },
+  {
+    "id": "collar_silk_bow_tie",
+    "name": "Silk Bow Tie",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_silk_bow_tie",
+    "description": "Elegant silk bow tie for a refined, focused appearance."
+  },
+  {
     "id": "gadget_focus_beacon",
     "name": "Focus Beacon",
     "category": "Gadget",
