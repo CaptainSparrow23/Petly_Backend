@@ -60,7 +60,7 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         ownedPets: ['pet_smurf'],
         ownedHats: ['hat_bucket_hat'],
         ownedFaces: ['face_sun_glasses'],
-        ownedCollars: ['collar_leather_collar'],
+        ownedCollars: ['collar_standard_leather'],
         ownedGadgets: ['gadget_laptop'],
         selectedPet: 'pet_smurf',
         selectedHat: null,
