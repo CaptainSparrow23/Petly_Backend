@@ -176,19 +176,11 @@
     "description": "Elegant silk bow tie for a refined, focused appearance."
   },
   {
-    "id": "gadget_focus_beacon",
-    "name": "Focus Beacon",
+    "id": "gadget_pot_and_stove",
+    "name": "Pot and Stove",
     "category": "Gadget",
     "priceCoins": 320,
-    "imageKey": "gadget_focus_beacon",
-    "description": "Glows gently when you\u2019re in the zone to deter interruptions."
-  },
-  {
-    "id": "gadget_calm_aura",
-    "name": "Calm Aura Patch",
-    "category": "Gadget",
-    "priceCoins": 320,
-    "imageKey": "gadget_calm_aura",
+    "imageKey": "gadget_pot_and_stove",
     "description": "Emits a soothing pulse to keep your sessions relaxed."
   },
   {
