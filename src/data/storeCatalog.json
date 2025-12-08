@@ -104,6 +104,14 @@
     "description": "Perfect for adding a touch of formality to your focus sessions."
   },
   {
+    "id": "hat_special_toque_blanche",
+    "name": "Toque Blanche",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_special_toque_blanche",
+    "description": "Traditional chef's hat to keep you focused in the kitchen."
+  },
+  {
     "id": "collar_scarf_minty",
     "name": "Minty Scarf",
     "category": "Collar",
@@ -174,6 +182,14 @@
     "priceCoins": 220,
     "imageKey": "collar_bow_tie_silk",
     "description": "Elegant silk bow tie for a refined, focused appearance."
+  },
+  {
+    "id": "collar_special_chef's_coat",
+    "name": "Chef's Coat",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_special_chef's_coat",
+    "description": "Professional chef's coat to inspire culinary focus."
   },
   {
     "id": "gadget_pot_and_stove",
