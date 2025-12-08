@@ -184,11 +184,11 @@
     "description": "Elegant silk bow tie for a refined, focused appearance."
   },
   {
-    "id": "collar_special_chef's_coat",
+    "id": "collar_special_chefs_coat",
     "name": "Chef's Coat",
     "category": "Collar",
     "priceCoins": 220,
-    "imageKey": "collar_special_chef's_coat",
+    "imageKey": "collar_special_chefs_coat",
     "description": "Professional chef's coat to inspire culinary focus."
   },
   {
