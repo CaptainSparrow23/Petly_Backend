@@ -32,6 +32,14 @@
     "description": "Hypes you up before deadlines and celebrates the finish."
   },
   {
+    "id": "pet_kitty",
+    "name": "Kitty",
+    "category": "Pet",
+    "priceCoins": 480,
+    "imageKey": "kitty",
+    "description": "A curious cat who keeps you company during long focus sessions."
+  },
+  {
     "id": "hat_beanie_minty",
     "name": "Minty Beanie",
     "category": "Hat",
