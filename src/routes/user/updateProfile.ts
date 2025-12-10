@@ -80,10 +80,10 @@ router.put('/update_profile/:userId', async (req: Request, res: Response) => {
 
     if (profileId !== undefined) {
       // Validate profileId
-      if (typeof profileId !== 'number' || ![1, 2].includes(profileId)) {
+      if (typeof profileId !== 'number' || ![1, 2, 3, 4].includes(profileId)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid profileId. Must be 1 or 2'
+          error: 'Invalid profileId. Must be 1, 2, 3, or 4'
         });
       }
 

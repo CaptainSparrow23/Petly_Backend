@@ -27,6 +27,14 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
     });
   }
 
+  // Validate profileId
+  if (![1, 2, 3, 4].includes(profileId)) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'Invalid profileId. Must be 1, 2, 3, or 4' 
+    });
+  }
+
   // Validate username format
   const trimmedUsername = username.trim();
   if (trimmedUsername.length < 2) {
