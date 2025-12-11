@@ -101,6 +101,7 @@ router.post("/", async (req: Request, res: Response) => {
     const coinsPerInterval = 5;
     const intervalsEarned = Math.floor(dur / rewardIntervalSec);
     let coinsAwarded = 0;
+    let xpAwarded = Math.max(0, Math.floor(dur / 60));
 
     if (intervalsEarned > 0) {
       const increment = intervalsEarned * coinsPerInterval;
@@ -113,10 +114,19 @@ router.post("/", async (req: Request, res: Response) => {
       );
     }
 
+    if (xpAwarded > 0) {
+      await userRef.set(
+        {
+          totalXP: admin.firestore.FieldValue.increment(xpAwarded),
+        },
+        { merge: true }
+      );
+    }
+
     return res.json({
       success: true,
       message: "Focus session saved and daily streak updated",
-      data: { id: focusRef.id, coinsAwarded },
+      data: { id: focusRef.id, coinsAwarded, xpAwarded },
     });
   } catch (error) {
     console.error("❌ Error saving focus session:", error);
