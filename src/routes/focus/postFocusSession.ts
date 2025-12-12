@@ -131,6 +131,7 @@ router.post("/", async (req: Request, res: Response) => {
           .set(
             {
               totalXP: admin.firestore.FieldValue.increment(xpAwarded),
+              totalFocusSeconds: admin.firestore.FieldValue.increment(Math.floor(dur)),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
             { merge: true }

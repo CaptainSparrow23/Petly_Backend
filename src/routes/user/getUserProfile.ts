@@ -35,10 +35,13 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
     // Fetch pet friendship XP (subcollection)
     const petFriendshipsSnap = await userRef.collection('petFriendships').get();
-    const petFriendships: Record<string, { totalXP: number }> = {};
+    const petFriendships: Record<string, { totalXP: number; totalFocusSeconds: number }> = {};
     petFriendshipsSnap.forEach((doc) => {
       const d = doc.data() as any;
-      petFriendships[doc.id] = { totalXP: toNumber(d?.totalXP) };
+      petFriendships[doc.id] = { 
+        totalXP: toNumber(d?.totalXP),
+        totalFocusSeconds: toNumber(d?.totalFocusSeconds, 0)
+      };
     });
 
     // Calculate today using the user's timezone (not UTC)
