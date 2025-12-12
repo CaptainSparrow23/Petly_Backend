@@ -121,6 +121,21 @@ router.post("/", async (req: Request, res: Response) => {
         },
         { merge: true }
       );
+
+      if (selectedPet) {
+        await db
+          .collection("users")
+          .doc(userId)
+          .collection("petFriendships")
+          .doc(selectedPet)
+          .set(
+            {
+              totalXP: admin.firestore.FieldValue.increment(xpAwarded),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+      }
     }
 
     return res.json({

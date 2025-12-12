@@ -33,6 +33,14 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const userData = userSnap.data();
     console.log(`[getUserProfile] Read user ${userId}. selectedPet: ${userData?.selectedPet}`);
 
+    // Fetch pet friendship XP (subcollection)
+    const petFriendshipsSnap = await userRef.collection('petFriendships').get();
+    const petFriendships: Record<string, { totalXP: number }> = {};
+    petFriendshipsSnap.forEach((doc) => {
+      const d = doc.data() as any;
+      petFriendships[doc.id] = { totalXP: toNumber(d?.totalXP) };
+    });
+
     // Calculate today using the user's timezone (not UTC)
     const now = DateTime.now().setZone(tz);
     const startOfTodayLocal = now.startOf('day').toJSDate();
@@ -129,6 +137,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       lastDailyGoalClaim: userData?.lastDailyGoalClaim ?? null,
       lastWeeklyGoalClaim: userData?.lastWeeklyGoalClaim ?? null,
       totalXP: toNumber(userData?.totalXP),
+      petFriendships,
     };
 
     return res
