@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
+import { getPetsUnlockedUpToLevel } from '../../utils/petUnlocks';
 
 const router = Router();
 
@@ -80,11 +81,30 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
 
     // Create or update the user's profile in Firestore
     const userDocRef = db.collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    
+    // Tutorial completion = Level 2, unlock Smurf
+    const tutorialLevel = 2;
+    const petsToUnlock = getPetsUnlockedUpToLevel(tutorialLevel);
+    const currentOwnedPets = Array.isArray(userData?.ownedPets)
+      ? (userData!.ownedPets as string[])
+      : [];
+    
+    const newPets = petsToUnlock.filter(petId => !currentOwnedPets.includes(petId));
+    const updatedOwnedPets = newPets.length > 0
+      ? [...currentOwnedPets, ...newPets]
+      : currentOwnedPets;
+
     await userDocRef.set({
       username: trimmedUsername,
       profileId: profileId,
+      ownedPets: updatedOwnedPets.length > 0 ? updatedOwnedPets : undefined,
     }, { merge: true });
 
+    if (newPets.length > 0) {
+      console.log(`🎉 Tutorial complete - unlocked pets for user ${userId}: ${newPets.join(', ')}`);
+    }
     console.log(`✅ Profile setup complete for user ${userId}: "${trimmedUsername}"`);
 
     res.status(200).json({

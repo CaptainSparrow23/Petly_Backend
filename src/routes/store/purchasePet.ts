@@ -54,6 +54,14 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     });
   }
 
+  // Prevent pet purchases - pets are now unlocked by level
+  if (catalogEntry.category === 'Pet') {
+    return res.status(400).json({
+      success: false,
+      error: 'Pets cannot be purchased. They are unlocked by reaching certain levels.',
+    });
+  }
+
   const expectedPrice = catalogEntry.priceCoins;
   // Default the submitted price to the canonical price if the client omits it.
   const submittedPrice =

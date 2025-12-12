@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { db } from "../../firebase"; // your initialized admin/db module
+import { getPetsUnlockedUpToLevel } from "../../utils/petUnlocks";
+import { calculateLevel } from "../../utils/levelUtils";
 
 const router = Router();
 
@@ -115,12 +117,41 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     if (xpAwarded > 0) {
+      // Get current totalXP to calculate new level
+      const userDoc = await userRef.get();
+      const currentTotalXP = userDoc.exists 
+        ? (typeof userDoc.data()?.totalXP === 'number' ? userDoc.data()!.totalXP : 0)
+        : 0;
+      const newTotalXP = currentTotalXP + xpAwarded;
+      const newLevel = calculateLevel(newTotalXP);
+      const oldLevel = calculateLevel(currentTotalXP);
+
       await userRef.set(
         {
           totalXP: admin.firestore.FieldValue.increment(xpAwarded),
         },
         { merge: true }
       );
+
+      // Unlock pets if level increased
+      if (newLevel > oldLevel) {
+        const petsToUnlock = getPetsUnlockedUpToLevel(newLevel);
+        const currentOwnedPets = Array.isArray(userDoc.data()?.ownedPets)
+          ? (userDoc.data()!.ownedPets as string[])
+          : [];
+        
+        const newPets = petsToUnlock.filter(petId => !currentOwnedPets.includes(petId));
+        
+        if (newPets.length > 0) {
+          await userRef.set(
+            {
+              ownedPets: admin.firestore.FieldValue.arrayUnion(...newPets),
+            },
+            { merge: true }
+          );
+          console.log(`🎉 Unlocked pets for user ${userId} at level ${newLevel}: ${newPets.join(', ')}`);
+        }
+      }
 
       if (selectedPet) {
         await db
