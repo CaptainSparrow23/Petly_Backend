@@ -120,6 +120,22 @@
     "description": "Traditional chef's hat to keep you focused in the kitchen."
   },
   {
+    "id": "hat_flower_crown_spring",
+    "name": "Spring Flower Crown",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_flower_crown_blossom",
+    "description": "An elegant pink flower for a special occasion."
+  },
+  {
+    "id": "hat_flower_crown_winter",
+    "name": "Winter Flower Crown",
+    "category": "Hat",
+    "priceCoins": 100,
+    "imageKey": "hat_flower_crown_blue",
+    "description": "An elegant blue flower for a special occasion."
+  },
+  {
     "id": "collar_scarf_minty",
     "name": "Minty Scarf",
     "category": "Collar",
