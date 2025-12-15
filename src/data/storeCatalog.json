@@ -216,6 +216,14 @@
     "description": "Nothing to see just a 9 year old laptop."
   },
   {
+    "id": "gadget_cello_artisan",
+    "name": "Artisan Cello",
+    "category": "Gadget",
+    "priceCoins": 420,
+    "imageKey": "gadget_cello_artisan",
+    "description": "An artisan cello to help you focus and relax."
+  },
+  {
     "id": "face_sun_glasses",
     "name": "Sunglasses",
     "category": "Face",
