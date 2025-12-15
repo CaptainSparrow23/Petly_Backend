@@ -103,12 +103,18 @@ router.post('/:userId', async (req: Request, res: Response) => {
       }
     }
 
-    // If all items already exist, nothing to claim
+    // If all items already exist, just report success without modifying owned lists.
+    // This prevents duplicate entries but also doesn't block the claim flow.
     if (!hasNewItems) {
-      return res.status(400).json({
-        success: false,
-        error: 'All rewards for this level have already been claimed',
-        alreadyClaimed: true,
+      await userRef.set(
+        { updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: `No new rewards to add for level ${numericLevel}; all rewards already owned.`,
+        data: { alreadyOwned: true },
       });
     }
 
