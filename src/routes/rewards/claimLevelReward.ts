@@ -62,6 +62,18 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
+    // Check if already claimed (simple array of level numbers)
+    const claimedLevels: number[] = Array.isArray(userData.claimedLevelRewards)
+      ? (userData.claimedLevelRewards as number[])
+      : [];
+    if (claimedLevels.includes(numericLevel)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Level reward already claimed',
+        alreadyClaimed: true,
+      });
+    }
+
     // Determine all reward item ids for this level
     const petRewards = PET_UNLOCKS_BY_LEVEL[numericLevel] ?? [];
     const gadgetRewards = LEVEL_GADGET_REWARDS[numericLevel] ?? [];
@@ -103,11 +115,14 @@ router.post('/:userId', async (req: Request, res: Response) => {
       }
     }
 
-    // If all items already exist, just report success without modifying owned lists.
-    // This prevents duplicate entries but also doesn't block the claim flow.
+    // If all items already exist, just mark as claimed without modifying owned lists.
+    // This prevents duplicate entries but still tracks that the level was claimed.
     if (!hasNewItems) {
       await userRef.set(
-        { updatedAt: new Date().toISOString() },
+        {
+          claimedLevelRewards: Array.from(new Set([...claimedLevels, numericLevel])),
+          updatedAt: new Date().toISOString(),
+        },
         { merge: true }
       );
 
@@ -118,6 +133,8 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
+    // Mark level as claimed and update owned lists
+    newData.claimedLevelRewards = Array.from(new Set([...claimedLevels, numericLevel]));
     newData.updatedAt = new Date().toISOString();
 
     await userRef.set(newData, { merge: true });
