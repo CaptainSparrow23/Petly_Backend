@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
+import { awardXpAndUpdateLevel } from '../../utils/xpRewards';
 
 const router = Router();
 
+// XP rewards for goals
 const REWARDS = {
   daily: { amount: 25, claimField: 'lastDailyGoalClaim' },
   weekly: { amount: 50, claimField: 'lastWeeklyGoalClaim' },
@@ -42,13 +44,12 @@ router.post('/:userId', async (req: Request, res: Response) => {
     }
 
     const userData = userDoc.data() ?? {};
-    const currentCoins = typeof userData.coins === 'number' && Number.isFinite(userData.coins) ? userData.coins : 0;
 
     const now = new Date();
     const currentPeriod = goalType === 'daily' ? getTodayString() : getWeekString(now);
     const { amount, claimField } = REWARDS[goalType as GoalType];
 
-    // Check if already claimed
+    // Check if already claimed for this period
     if (userData[claimField] === currentPeriod) {
       return res.status(400).json({
         success: false,
@@ -57,16 +58,28 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    const updatedCoins = currentCoins + amount;
+    // Award XP using shared utility (updates totalXP & returns level info)
+    const { oldLevel, newLevel } = await awardXpAndUpdateLevel(userDocRef, amount);
+
+    // Mark this goal as claimed for the current period
     await userDocRef.set(
-      { coins: updatedCoins, [claimField]: currentPeriod, updatedAt: new Date().toISOString() },
+      {
+        [claimField]: currentPeriod,
+        updatedAt: new Date().toISOString(),
+      },
       { merge: true }
     );
 
     return res.status(200).json({
       success: true,
       message: `${goalType} goal reward claimed!`,
-      data: { rewardAmount: amount, coins: updatedCoins, claimedAt: currentPeriod },
+      data: {
+        rewardAmount: amount,
+        xpAwarded: amount,
+        oldLevel,
+        newLevel,
+        claimedAt: currentPeriod,
+      },
     });
   } catch (error) {
     console.error('❌ Error claiming goal reward:', error);
