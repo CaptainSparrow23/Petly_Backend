@@ -62,37 +62,17 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    // Prevent double-claim by tracking claimed levels
-    const claimedLevels: number[] = Array.isArray(userData.claimedLevelRewards)
-      ? (userData.claimedLevelRewards as number[])
-      : [];
-    if (claimedLevels.includes(numericLevel)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Level reward already claimed',
-        alreadyClaimed: true,
-      });
-    }
-
     // Determine all reward item ids for this level
     const petRewards = PET_UNLOCKS_BY_LEVEL[numericLevel] ?? [];
     const gadgetRewards = LEVEL_GADGET_REWARDS[numericLevel] ?? [];
     const rewardIds = Array.from(new Set([...petRewards, ...gadgetRewards]));
 
     if (rewardIds.length === 0) {
-      // Nothing to claim; still mark level as claimed so we don't keep offering it.
-      await userRef.set(
-        {
-          claimedLevelRewards: Array.from(new Set([...claimedLevels, numericLevel])),
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-
+      // Nothing to claim for this level
       return res.status(200).json({
         success: true,
-        message: `No rewards configured for level ${numericLevel}, marking as claimed.`,
-        data: { claimedLevelRewards: Array.from(new Set([...claimedLevels, numericLevel])) },
+        message: `No rewards configured for level ${numericLevel}.`,
+        data: {},
       });
     }
 
@@ -110,14 +90,28 @@ router.post('/:userId', async (req: Request, res: Response) => {
     }
 
     const newData: Record<string, any> = {};
+    let hasNewItems = false;
 
+    // Only add items that don't already exist in the ownedLists
     for (const [field, ids] of Object.entries(updates)) {
       const existing = Array.isArray(userData[field]) ? (userData[field] as string[]) : [];
-      const merged = Array.from(new Set([...existing, ...ids]));
-      newData[field] = merged;
+      const newItems = ids.filter((id) => !existing.includes(id));
+      
+      if (newItems.length > 0) {
+        hasNewItems = true;
+        newData[field] = Array.from(new Set([...existing, ...newItems]));
+      }
     }
 
-    newData.claimedLevelRewards = Array.from(new Set([...claimedLevels, numericLevel]));
+    // If all items already exist, nothing to claim
+    if (!hasNewItems) {
+      return res.status(400).json({
+        success: false,
+        error: 'All rewards for this level have already been claimed',
+        alreadyClaimed: true,
+      });
+    }
+
     newData.updatedAt = new Date().toISOString();
 
     await userRef.set(newData, { merge: true });
