@@ -101,6 +101,10 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const timeActiveToday = totalFocusSecToday; // now in seconds (not minutes)
     const minutesByHour = secByHour.map(sec => Math.floor(sec / 60));
 
+    // Friends summary (lightweight) - full details are fetched via /api/get_friends
+    const friendsArray = Array.isArray(userData?.friends) ? (userData!.friends as string[]) : [];
+    const friendsCount = friendsArray.length;
+
     const profileData = {
       userId,
       username: userData?.username ?? null,
@@ -140,6 +144,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       lastDailyGoalClaim: userData?.lastDailyGoalClaim ?? null,
       lastWeeklyGoalClaim: userData?.lastWeeklyGoalClaim ?? null,
       totalXP: toNumber(userData?.totalXP),
+      friendsCount,
       petFriendships,
     };
 
