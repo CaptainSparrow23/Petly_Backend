@@ -80,11 +80,19 @@ router.post('/:userId', async (req: Request, res: Response) => {
     const rewardIds = Array.from(new Set([...petRewards, ...gadgetRewards]));
 
     if (rewardIds.length === 0) {
-      // Nothing to claim for this level
+      // Nothing to claim for this level, but still mark it as claimed
+      await userRef.set(
+        {
+          claimedLevelRewards: Array.from(new Set([...claimedLevels, numericLevel])),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
       return res.status(200).json({
         success: true,
         message: `No rewards configured for level ${numericLevel}.`,
-        data: {},
+        data: { claimedLevelRewards: Array.from(new Set([...claimedLevels, numericLevel])) },
       });
     }
 
