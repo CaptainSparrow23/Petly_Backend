@@ -104,6 +104,10 @@ router.get('/:userId', async (req: Request, res: Response) => {
     // Friends summary (lightweight) - full details are fetched via /api/get_friends
     const friendsArray = Array.isArray(userData?.friends) ? (userData!.friends as string[]) : [];
     const friendsCount = friendsArray.length;
+    
+    // Compute hasFriendRequests from requests array (always accurate, can't get out of sync)
+    const requestsArray = Array.isArray(userData?.requests) ? (userData!.requests as string[]) : [];
+    const hasFriendRequests = requestsArray.length > 0;
 
     const profileData = {
       userId,
@@ -149,6 +153,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       totalXP: toNumber(userData?.totalXP),
       friendsCount,
       petFriendships,
+      hasFriendRequests,
     };
 
     return res
