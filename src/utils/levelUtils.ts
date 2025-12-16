@@ -14,7 +14,7 @@ const toNumber = (value: unknown, fallback = 0) => {
  */
 export function calculateLevel(totalXPRaw: unknown): number {
   const totalXP = Math.max(0, toNumber(totalXPRaw, 0));
-  const maxLevel = 10;
+  const maxLevel = 9;
   const xpNeededForNext = (currentLevel: number) =>
     Math.round(50 * Math.pow(currentLevel, 1.5)); // XP to go from L to L+1 (rounded to whole XP)
 

@@ -8,9 +8,9 @@ const router = Router();
 
 // Map of level → additional non-pet reward ids (e.g. gadgets) that are granted when claiming that level.
 const LEVEL_GADGET_REWARDS: Record<number, string[]> = {
-  1: ['gadget_laptop'],
-  5: ['gadget_pot_and_stove'],
-  7: ['gadget_cello_artisan'],
+  2: ['gadget_laptop'],
+  6: ['gadget_pot_and_stove'],
+  8: ['gadget_cello_artisan'],
 };
 
 // Map item category to the owned* field on the user document.
