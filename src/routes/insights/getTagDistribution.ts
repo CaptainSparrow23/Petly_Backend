@@ -18,8 +18,8 @@ router.get("/:userId", async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: "Missing userId" });
     }
 
-    let start: DateTime;
-    let end: DateTime;
+    let start;
+    let end;
     const now = DateTime.now().setZone(tz);
 
     if (mode === "day" && dateStr) {
