@@ -57,9 +57,6 @@ router.get("/:userId", async (req: Request, res: Response) => {
     snap.forEach((doc) => {
       const data = doc.data();
       const activity = data.activity || "Unknown";
-      
-      // Skip Rest sessions, only count Focus sessions
-      if (activity === "Rest") return;
 
       const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
       const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
