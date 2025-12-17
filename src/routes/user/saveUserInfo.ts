@@ -32,10 +32,24 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
     const doc = await userDocRef.get();
 
     if (doc.exists) {
-      await userDocRef.update({
+      const userData = doc.data();
+      const updateData: any = {
         email: email,
         displayName: displayName || null,
-      });
+      };
+      
+      // Add default tags if user doesn't have tagList
+      if (!userData?.tagList || !Array.isArray(userData.tagList) || userData.tagList.length === 0) {
+        const defaultTags = [
+          { id: 'focus', label: 'Focus', color: '#FE534B', activity: 'Focus' },
+          { id: 'rest', label: 'Rest', color: '#9AA587', activity: 'Rest' },
+          { id: 'work', label: 'Work', color: '#63C5B8', activity: 'Focus' },
+          { id: 'study', label: 'Study', color: '#6EC1E4', activity: 'Focus' },
+        ];
+        updateData.tagList = defaultTags;
+      }
+      
+      await userDocRef.update(updateData);
 
       console.log(`✅ Updated user info for existing user: ${userId} (${email})`);
 
