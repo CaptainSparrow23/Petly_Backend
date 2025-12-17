@@ -142,6 +142,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       selectedFace: userData?.selectedFace ?? null,
       selectedCollar: userData?.selectedCollar ?? null,
       selectedGadget: userData?.selectedGadget ?? 'gadget_laptop',
+      selectedTag: userData?.selectedTag ?? null,
       dailyStreak: toNumber(userData?.dailyStreak),
       highestStreak: toNumber(userData?.highestStreak),
       totalFocusSeconds: toNumber(userData?.totalFocusSeconds),
