@@ -18,6 +18,7 @@ import purchasePetRoute from './routes/store/purchasePet';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getGoals from './routes/insights/getGoals';
 import focusRangeRouter from './routes/insights/getFocusRange';
+import tagDistributionRouter from './routes/insights/getTagDistribution';
 import claimGoalRewardRoute from './routes/insights/claimGoalReward';
 import claimLevelRewardRoute from './routes/rewards/claimLevelReward';
 import { startDailyFocusCron } from './cron/computeDailyFocus';
@@ -41,6 +42,7 @@ app.use('/api/get_streak', getStreak);
 app.use('/api/get_week_focus', focusWeekRouter);
 app.use('/api/get_goals', getGoals);
 app.use('/api/get_focus_range', focusRangeRouter);
+app.use('/api/get_tag_distribution', tagDistributionRouter);
 app.use('/api/claim_goal_reward', claimGoalRewardRoute);
 app.use('/api/claim_level_reward', claimLevelRewardRoute);
 
