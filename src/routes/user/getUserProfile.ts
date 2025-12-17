@@ -154,6 +154,12 @@ router.get('/:userId', async (req: Request, res: Response) => {
       friendsCount,
       petFriendships,
       hasFriendRequests,
+      tagList: Array.isArray(userData?.tagList) ? userData.tagList : [
+        { id: 'focus', label: 'Focus', color: '#FE534B', activity: 'Focus' },
+        { id: 'rest', label: 'Rest', color: '#9AA587', activity: 'Rest' },
+        { id: 'work', label: 'Work', color: '#63C5B8', activity: 'Focus' },
+        { id: 'study', label: 'Study', color: '#6EC1E4', activity: 'Focus' },
+      ],
     };
 
     return res

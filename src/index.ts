@@ -25,6 +25,7 @@ import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import updateSelectedAccessoriesRoute from './routes/pets/updateSelectedAccessories';
 import getOwnedPetsRoute from './routes/pets/getOwnedPets';
+import updateTagsRoute from './routes/user/updateTags';
 
 dotenv.config();
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/friends', requestFriendRoute);
 app.use('/api/friends', respondFriendRoute);
 
 app.use('/api/user', updateProfileRoute);
+app.use('/api/user', updateTagsRoute);
 app.use('/api/get_user_profile', getUserProfileRoute);
 app.use('/api/auth', setupProfileRoute);
 app.use('/api/auth', checkUserStatusRoute);
