@@ -50,6 +50,14 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         }
       });
     } else {
+      // Default tags for new users
+      const defaultTags = [
+        { id: 'focus', label: 'Focus', color: '#FE534B', activity: 'Focus' },
+        { id: 'rest', label: 'Rest', color: '#9AA587', activity: 'Rest' },
+        { id: 'work', label: 'Work', color: '#63C5B8', activity: 'Focus' },
+        { id: 'study', label: 'Study', color: '#6EC1E4', activity: 'Focus' },
+      ];
+
       // User document doesn't exist, create it with email and displayName
       await userDocRef.set({
         email: email,
@@ -68,6 +76,7 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         selectedFace: null,
         selectedCollar: null,
         selectedGadget: 'gadget_laptop',
+        tagList: defaultTags,
       });
 
       console.log(`✅ Created new user document: ${userId} (${email})`);

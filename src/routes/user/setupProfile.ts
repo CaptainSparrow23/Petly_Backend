@@ -96,11 +96,26 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
       ? [...currentOwnedPets, ...newPets]
       : currentOwnedPets;
 
-    await userDocRef.set({
+    // Default tags if user doesn't have any
+    const defaultTags = [
+      { id: 'focus', label: 'Focus', color: '#FE534B', activity: 'Focus' },
+      { id: 'rest', label: 'Rest', color: '#9AA587', activity: 'Rest' },
+      { id: 'work', label: 'Work', color: '#63C5B8', activity: 'Focus' },
+      { id: 'study', label: 'Study', color: '#6EC1E4', activity: 'Focus' },
+    ];
+
+    const updateData: any = {
       username: trimmedUsername,
       profileId: profileId,
       ownedPets: updatedOwnedPets.length > 0 ? updatedOwnedPets : undefined,
-    }, { merge: true });
+    };
+
+    // Only set default tags if user doesn't have tagList
+    if (!userData?.tagList || !Array.isArray(userData.tagList) || userData.tagList.length === 0) {
+      updateData.tagList = defaultTags;
+    }
+
+    await userDocRef.set(updateData, { merge: true });
 
     if (newPets.length > 0) {
       console.log(`🎉 Tutorial complete - unlocked pets for user ${userId}: ${newPets.join(', ')}`);
