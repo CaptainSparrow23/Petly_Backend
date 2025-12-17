@@ -33,10 +33,11 @@ router.put('/tags/:userId', async (req: Request, res: Response) => {
         error: 'Each tag must have id, label, color, and activity fields',
       });
     }
-    if (tag.activity !== 'Focus' && tag.activity !== 'Rest') {
+    // Activity can be any string (each tag represents a different activity)
+    if (typeof tag.activity !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Tag activity must be either "Focus" or "Rest"',
+        error: 'Tag activity must be a string',
       });
     }
   }
