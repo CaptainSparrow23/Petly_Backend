@@ -14,6 +14,7 @@ import setupProfileRoute from './routes/user/setupProfile';
 import checkUserStatusRoute from './routes/user/checkUserStatus';
 import saveUserInfoRoute from './routes/user/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
+import rotatedCatalogRoute from './routes/store/getRotatedCatalog';
 import purchasePetRoute from './routes/store/purchasePet';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getGoals from './routes/insights/getGoals';
@@ -60,6 +61,7 @@ app.use('/api/auth', checkUserStatusRoute);
 app.use('/api/auth', saveUserInfoRoute);
 
 app.use('/api/store', storeCatalogRoute);
+app.use('/api/store', rotatedCatalogRoute);
 app.use('/api/store', purchasePetRoute);
 
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
