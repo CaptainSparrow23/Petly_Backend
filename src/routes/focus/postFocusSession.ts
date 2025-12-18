@@ -2,13 +2,113 @@ import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { db } from "../../firebase"; // your initialized admin/db module
 import { awardXpAndUpdateLevel } from "../../utils/xpRewards";
+import { DateTime } from "luxon";
 
 const router = Router();
 
+const toDateFromIso = (value: unknown) => {
+  if (typeof value !== "string") return null;
+  const d = new Date(value);
+  return Number.isFinite(d.getTime()) ? d : null;
+};
+
+type DayAgg = { totalSeconds: number; byHourSeconds: number[] };
+
+async function incrementRollupsForSession(opts: {
+  userId: string;
+  tz: string;
+  tagId: string | null;
+  start: Date;
+  end: Date;
+}) {
+  const { userId, tz, tagId, start, end } = opts;
+  const tagKey = tagId && tagId.trim().length > 0 ? tagId.trim() : "_unknown";
+
+  const sessionStart = DateTime.fromJSDate(start).setZone(tz);
+  const sessionEnd = DateTime.fromJSDate(end).setZone(tz);
+  if (!sessionStart.isValid || !sessionEnd.isValid || sessionEnd <= sessionStart) return;
+
+  const byDay = new Map<string, DayAgg>();
+  const byMonthTotalSeconds = new Map<string, number>();
+
+  let cursor = sessionStart;
+  while (cursor < sessionEnd) {
+    const dayStart = cursor.startOf("day");
+    const nextDay = dayStart.plus({ days: 1 });
+    const chunkEnd = sessionEnd < nextDay ? sessionEnd : nextDay;
+    const dayId = dayStart.toISODate();
+    if (!dayId) break;
+
+    const secondsForDay = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
+    if (secondsForDay === 0) {
+      cursor = chunkEnd;
+      continue;
+    }
+
+    const monthId = dayStart.toFormat("yyyy-MM");
+    byMonthTotalSeconds.set(monthId, (byMonthTotalSeconds.get(monthId) ?? 0) + secondsForDay);
+
+    if (!byDay.has(dayId)) {
+      byDay.set(dayId, { totalSeconds: 0, byHourSeconds: Array(24).fill(0) });
+    }
+    const dayAgg = byDay.get(dayId)!;
+    dayAgg.totalSeconds += secondsForDay;
+
+    let hourCursor = cursor;
+    while (hourCursor < chunkEnd) {
+      const hourIdx = hourCursor.hour;
+      const nextHour = hourCursor.startOf("hour").plus({ hours: 1 });
+      const hourEnd = chunkEnd < nextHour ? chunkEnd : nextHour;
+      const secondsForHour = Math.max(0, Math.floor(hourEnd.diff(hourCursor, "seconds").seconds));
+      dayAgg.byHourSeconds[hourIdx] += secondsForHour;
+      hourCursor = hourEnd;
+    }
+
+    cursor = chunkEnd;
+  }
+
+  if (byDay.size === 0 && byMonthTotalSeconds.size === 0) return;
+
+  const batch = db.batch();
+  const userRef = db.collection("users").doc(userId);
+
+  for (const [dayId, agg] of byDay.entries()) {
+    const dailyRef = userRef.collection("dailyRollups").doc(dayId);
+    const update: Record<string, any> = {
+      date: dayId,
+      tz,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      totalSeconds: admin.firestore.FieldValue.increment(agg.totalSeconds),
+      [`byTagSeconds.${tagKey}`]: admin.firestore.FieldValue.increment(agg.totalSeconds),
+    };
+
+    agg.byHourSeconds.forEach((sec, hourIdx) => {
+      if (!sec) return;
+      update[`byHourSeconds.${hourIdx}`] = admin.firestore.FieldValue.increment(sec);
+    });
+
+    batch.set(dailyRef, update, { merge: true });
+  }
+
+  for (const [monthId, seconds] of byMonthTotalSeconds.entries()) {
+    if (!seconds) continue;
+    const monthlyRef = userRef.collection("monthlyRollups").doc(monthId);
+    const update: Record<string, any> = {
+      month: monthId,
+      tz,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      totalSeconds: admin.firestore.FieldValue.increment(seconds),
+      [`byTagSeconds.${tagKey}`]: admin.firestore.FieldValue.increment(seconds),
+    };
+    batch.set(monthlyRef, update, { merge: true });
+  }
+
+  await batch.commit();
+}
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { userId, activity, durationSec } = req.body || {};
+    const { userId, activity, durationSec, startTs, endTs, tagId, tz } = req.body || {};
 
     if (!userId || !activity || durationSec == null) {
       return res.status(400).json({
@@ -24,19 +124,48 @@ router.post("/", async (req: Request, res: Response) => {
         .json({ success: false, error: "durationSec must be a positive number" });
     }
 
-    const end = new Date(); // end time = now (server)
-    const start = new Date(end.getTime() - Math.floor(dur) * 1000); // derive start from duration
+    const tzName = typeof tz === "string" && tz.trim().length > 0 ? tz.trim() : "Europe/London";
+
+    const requestedStart = toDateFromIso(startTs);
+    const requestedEnd = toDateFromIso(endTs);
+
+    let start: Date;
+    let end: Date;
+
+    if (requestedStart && requestedEnd && requestedEnd.getTime() > requestedStart.getTime()) {
+      start = requestedStart;
+      end = requestedEnd;
+    } else if (requestedStart) {
+      start = requestedStart;
+      end = new Date(start.getTime() + Math.floor(dur) * 1000);
+    } else {
+      end = new Date(); // fallback to server time
+      start = new Date(end.getTime() - Math.floor(dur) * 1000);
+    }
+
+    const computedDurationSec = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000));
 
     // 1) Get user's selected pet before saving session
     const userSnap = await db.collection("users").doc(userId).get();
     const selectedPet = userSnap.exists ? userSnap.data()?.selectedPet : null;
+
+    const resolvedTagId = (() => {
+      if (typeof tagId === "string" && tagId.trim().length > 0) return tagId.trim();
+      const tagList = userSnap.exists ? (userSnap.data()?.tagList as any[] | undefined) : undefined;
+      if (!Array.isArray(tagList)) return null;
+      const match = tagList.find((t) => t?.label === activity);
+      const id = match?.id;
+      return typeof id === "string" && id.trim().length > 0 ? id.trim() : null;
+    })();
 
     // 2) Write the focus session with selected pet
     const sessionDoc = {
       activity,
       startTs: admin.firestore.Timestamp.fromDate(start),
       endTs: admin.firestore.Timestamp.fromDate(end),
-      durationSec: Math.floor(dur),
+      durationSec: computedDurationSec,
+      tagId: resolvedTagId,
+      tz: tzName,
       selectedPet: selectedPet || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
@@ -46,6 +175,18 @@ router.post("/", async (req: Request, res: Response) => {
       .doc(userId)
       .collection("focus")
       .add(sessionDoc);
+
+    try {
+      await incrementRollupsForSession({
+        userId,
+        tz: tzName,
+        tagId: resolvedTagId,
+        start,
+        end,
+      });
+    } catch (rollupError) {
+      console.error("❌ Failed to update rollups:", rollupError);
+    }
 
     // 3) Update daily streak on the user doc (transactional)
     const userRef = db.collection("users").doc(userId);
@@ -92,7 +233,7 @@ router.post("/", async (req: Request, res: Response) => {
           dailyStreak: newStreak,
           highestStreak: Math.max(newStreak, prevHighest),
           lastUpdatedDailyStreak: admin.firestore.Timestamp.fromDate(now),
-          totalFocusSeconds: admin.firestore.FieldValue.increment(Math.floor(dur)),
+          totalFocusSeconds: admin.firestore.FieldValue.increment(computedDurationSec),
         },
         { merge: true }
       );
@@ -100,9 +241,9 @@ router.post("/", async (req: Request, res: Response) => {
 
     const rewardIntervalSec = 10 * 60;
     const coinsPerInterval = 5;
-    const intervalsEarned = Math.floor(dur / rewardIntervalSec);
+    const intervalsEarned = Math.floor(computedDurationSec / rewardIntervalSec);
     let coinsAwarded = 0;
-    let xpAwarded = Math.max(0, Math.floor(dur / 60));
+    let xpAwarded = Math.max(0, Math.floor(computedDurationSec / 60));
 
     if (intervalsEarned > 0) {
       const increment = intervalsEarned * coinsPerInterval;
@@ -132,7 +273,7 @@ router.post("/", async (req: Request, res: Response) => {
           .set(
             {
               totalXP: admin.firestore.FieldValue.increment(xpAwarded),
-              totalFocusSeconds: admin.firestore.FieldValue.increment(Math.floor(dur)),
+              totalFocusSeconds: admin.firestore.FieldValue.increment(computedDurationSec),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
             { merge: true }

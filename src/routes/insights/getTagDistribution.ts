@@ -1,14 +1,17 @@
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { DateTime } from "luxon";
+import { ensureDailyRollupsInRange, ensureMonthlyRollupsInRange, normalizeTz } from "../../utils/rollups";
 
 const router = Router();
 const db = admin.firestore();
 
+type LuxonDateTime = ReturnType<typeof DateTime.now>;
+
 router.get("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    const tz = (req.query.tz as string) || "Europe/London";
+    const tz = normalizeTz(req.query.tz as string | undefined);
     const mode = (req.query.mode as string) || "month"; // day, month, year, all
     const dateStr = req.query.date as string;
     const year = req.query.year ? Number(req.query.year) : undefined;
@@ -18,8 +21,8 @@ router.get("/:userId", async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: "Missing userId" });
     }
 
-    let start;
-    let end;
+    let start: LuxonDateTime;
+    let endExclusive: LuxonDateTime;
     const now = DateTime.now().setZone(tz);
 
     if (mode === "day" && dateStr) {
@@ -28,83 +31,75 @@ router.get("/:userId", async (req: Request, res: Response) => {
         return res.status(400).json({ success: false, error: "Invalid date" });
       }
       start = dayDt.startOf("day");
-      end = dayDt.endOf("day");
+      endExclusive = start.plus({ days: 1 });
     } else if (mode === "month" && year && month) {
       start = DateTime.fromObject({ year, month, day: 1 }, { zone: tz }).startOf("day");
-      end = start.endOf("month");
+      endExclusive = start.plus({ months: 1 });
     } else if (mode === "year" && year) {
       start = DateTime.fromObject({ year, month: 1, day: 1 }, { zone: tz }).startOf("day");
-      end = start.endOf("year");
+      endExclusive = start.plus({ years: 1 });
     } else if (mode === "all") {
       // Get all time data
       start = DateTime.fromObject({ year: 2018, month: 1, day: 1 }, { zone: tz }).startOf("day");
-      end = now.endOf("day");
+      endExclusive = now.startOf("month").plus({ months: 1 });
     } else {
       // Default to current month
       start = now.startOf("month");
-      end = now.endOf("month");
+      endExclusive = start.plus({ months: 1 });
     }
 
-    const focusCol = db.collection("users").doc(userId).collection("focus");
-    
-    // Query sessions that START in the range OR END in the range (to catch sessions spanning boundaries)
-    const startTimestamp = admin.firestore.Timestamp.fromDate(start.toJSDate());
-    const endTimestamp = admin.firestore.Timestamp.fromDate(end.toJSDate());
-    
-    const [qStartSnap, qEndSnap] = await Promise.all([
-      focusCol
-        .where("startTs", ">=", startTimestamp)
-        .where("startTs", "<=", endTimestamp)
-        .get(),
-      focusCol
-        .where("endTs", ">=", startTimestamp)
-        .where("endTs", "<=", endTimestamp)
-        .get(),
-    ]);
+    const startOfTomorrow = now.startOf("day").plus({ days: 1 });
+    let effectiveEndExclusive = endExclusive;
+    if (mode === "month" || mode === "day") {
+      effectiveEndExclusive = endExclusive > startOfTomorrow ? startOfTomorrow : endExclusive;
+    } else if (mode === "year" && year === now.year) {
+      const nextMonthStart = now.startOf("month").plus({ months: 1 });
+      effectiveEndExclusive = nextMonthStart < endExclusive ? nextMonthStart : endExclusive;
+    }
 
-    // Merge both result sets to avoid duplicates
-    const docsMap = new Map<string, admin.firestore.QueryDocumentSnapshot>();
-    qStartSnap.forEach((d) => docsMap.set(d.id, d));
-    qEndSnap.forEach((d) => docsMap.set(d.id, d));
+    const totalsByTagId: Record<string, number> = {};
 
-    // Aggregate by activity/tag
-    const tagStats: Record<string, { totalSeconds: number; sessionCount: number }> = {};
+    if (mode === "day" || mode === "month") {
+      const daily = await ensureDailyRollupsInRange({
+        userId,
+        tz,
+        rangeStart: start,
+        rangeEndExclusive: effectiveEndExclusive,
+      });
+      daily.forEach((doc) => {
+        const byTag = (doc?.byTagSeconds ?? {}) as Record<string, unknown>;
+        Object.entries(byTag).forEach(([tagId, sec]) => {
+          const seconds = Number(sec ?? 0) || 0;
+          if (!seconds) return;
+          totalsByTagId[tagId] = (totalsByTagId[tagId] ?? 0) + seconds;
+        });
+      });
+    } else {
+      const monthly = await ensureMonthlyRollupsInRange({
+        userId,
+        tz,
+        rangeStart: start,
+        rangeEndExclusive: effectiveEndExclusive,
+      });
+      monthly.forEach((doc) => {
+        const byTag = (doc?.byTagSeconds ?? {}) as Record<string, unknown>;
+        Object.entries(byTag).forEach(([tagId, sec]) => {
+          const seconds = Number(sec ?? 0) || 0;
+          if (!seconds) return;
+          totalsByTagId[tagId] = (totalsByTagId[tagId] ?? 0) + seconds;
+        });
+      });
+    }
 
-    docsMap.forEach((doc) => {
-      const data = doc.data();
-      const activity = data.activity || "Unknown";
-
-      const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
-      const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
-
-      const sessionStart = DateTime.fromJSDate(rawStart).setZone(tz);
-      const sessionEnd = DateTime.fromJSDate(rawEnd).setZone(tz);
-
-      if (!sessionStart.isValid || !sessionEnd.isValid || sessionEnd <= sessionStart) return;
-
-      // Clamp to the requested time range
-      let clampedStart = sessionStart < start ? start : sessionStart;
-      let clampedEnd = sessionEnd > end ? end : sessionEnd;
-      if (clampedEnd <= clampedStart) return;
-
-      const seconds = Math.max(0, Math.floor(clampedEnd.diff(clampedStart, "seconds").seconds));
-
-      if (!tagStats[activity]) {
-        tagStats[activity] = { totalSeconds: 0, sessionCount: 0 };
-      }
-      tagStats[activity].totalSeconds += seconds;
-      tagStats[activity].sessionCount += 1;
-    });
-
-    // Convert to array format
-    const distribution = Object.entries(tagStats)
-      .map(([tag, stats]) => ({
-        tag,
-        totalSeconds: stats.totalSeconds,
-        totalMinutes: Math.round(stats.totalSeconds / 60),
-        sessionCount: stats.sessionCount,
+    const distribution = Object.entries(totalsByTagId)
+      .map(([tagId, totalSeconds]) => ({
+        tag: tagId,
+        tagId,
+        totalSeconds,
+        totalMinutes: Math.round(totalSeconds / 60),
+        sessionCount: 0,
       }))
-      .sort((a, b) => b.totalSeconds - a.totalSeconds); // Sort by total time descending
+      .sort((a, b) => b.totalSeconds - a.totalSeconds);
 
     const totalSeconds = distribution.reduce((acc, d) => acc + (d.totalSeconds || 0), 0);
 
@@ -116,7 +111,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
         totalMinutes: Math.round(totalSeconds / 60),
         period: {
           start: start.toISO(),
-          end: end.toISO(),
+          end: endExclusive.toISO(),
           mode,
         },
       },

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
 import { DateTime } from 'luxon';
+import { ensureDailyRollupsInRange, normalizeTz } from '../../utils/rollups';
 
 const router = Router();
 
@@ -12,7 +13,7 @@ const toNumber = (value: unknown, fallback = 0) => {
 
 router.get('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const tz = (req.query.tz as string) || 'Europe/London'; // Accept timezone from query, default to London
+  const tz = normalizeTz(req.query.tz as string | undefined); // Accept timezone from query
   
   if (!userId) {
     return res.status(400).json({ success: false, error: 'Missing required parameter: userId' });
@@ -44,62 +45,26 @@ router.get('/:userId', async (req: Request, res: Response) => {
       };
     });
 
-    // Calculate today using the user's timezone (not UTC)
+    // Calculate today using the user's timezone
     const now = DateTime.now().setZone(tz);
-    const startOfTodayLocal = now.startOf('day').toJSDate();
-    const startOfTomorrowLocal = now.plus({ days: 1 }).startOf('day').toJSDate();
+    const startOfToday = now.startOf('day');
+    const startOfTomorrow = startOfToday.plus({ days: 1 });
+    const todayId = startOfToday.toISODate()!;
 
-    console.log(`📅 User TZ: ${tz}, Today range: ${startOfTodayLocal.toISOString()} to ${startOfTomorrowLocal.toISOString()}`);
+    const daily = await ensureDailyRollupsInRange({
+      userId,
+      tz,
+      rangeStart: startOfToday,
+      rangeEndExclusive: startOfTomorrow,
+    });
 
-    const focusCol = userRef.collection('focus');
-
-    // Query only today's sessions
-    const [qStartSnap, qEndSnap] = await Promise.all([
-      focusCol.where('startTs', '>=', startOfTodayLocal).where('startTs', '<', startOfTomorrowLocal).get(),
-      focusCol.where('endTs', '>=', startOfTodayLocal).where('endTs', '<', startOfTomorrowLocal).get(),
-    ]);
-
-    // Merge both result sets
-    const docsMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
-    qStartSnap.forEach((d) => docsMap.set(d.id, d));
-    qEndSnap.forEach((d) => docsMap.set(d.id, d));
-
-    let totalFocusSecToday = 0;
-    const secByHour = Array(24).fill(0) as number[];
-
-    for (const d of docsMap.values()) {
-      const data: any = d.data();
-      if (data?.activity !== 'Focus' && data?.activity !== 'Rest') continue;
-
-      const start: Date =
-        typeof data.startTs?.toDate === 'function' ? data.startTs.toDate() : new Date(data.startTs);
-      const end: Date =
-        typeof data.endTs?.toDate === 'function' ? data.endTs.toDate() : new Date(data.endTs);
-
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
-
-      // Clamp to today's window
-      let s = new Date(Math.max(start.getTime(), startOfTodayLocal.getTime()));
-      const e = new Date(Math.min(end.getTime(), startOfTomorrowLocal.getTime()));
-      if (e <= s) continue;
-
-      // Calculate total for the session
-      const sessionSec = Math.floor((e.getTime() - s.getTime()) / 1000);
-      totalFocusSecToday += sessionSec;
-
-      // Distribute across hour buckets (using the user's timezone for hour extraction)
-      while (s < e) {
-        const sLuxon = DateTime.fromJSDate(s).setZone(tz);
-        const hourIdx = sLuxon.hour;
-        const nextHour = sLuxon.plus({ hours: 1 }).startOf('hour').toJSDate();
-        const chunkEnd = e < nextHour ? e : nextHour;
-        secByHour[hourIdx] += Math.max(0, Math.floor((chunkEnd.getTime() - s.getTime()) / 1000));
-        s = chunkEnd;
-      }
-    }
-
-    const timeActiveToday = totalFocusSecToday; // now in seconds (not minutes)
-    const minutesByHour = secByHour.map(sec => Math.floor(sec / 60));
+    const rollup = daily.get(todayId) as any | undefined;
+    const timeActiveToday = typeof rollup?.totalSeconds === 'number' ? rollup.totalSeconds : 0;
+    const byHourSeconds = (rollup?.byHourSeconds ?? {}) as Record<string, unknown>;
+    const minutesByHour = Array.from({ length: 24 }, (_, h) => {
+      const sec = Number(byHourSeconds[String(h)] ?? 0) || 0;
+      return Math.floor(sec / 60);
+    });
 
     // Friends summary (lightweight) - full details are fetched via /api/get_friends
     const friendsArray = Array.isArray(userData?.friends) ? (userData!.friends as string[]) : [];
