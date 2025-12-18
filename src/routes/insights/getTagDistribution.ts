@@ -68,7 +68,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
     qEndSnap.forEach((d) => docsMap.set(d.id, d));
 
     // Aggregate by activity/tag
-    const tagStats: Record<string, { totalMinutes: number; sessionCount: number }> = {};
+    const tagStats: Record<string, { totalSeconds: number; sessionCount: number }> = {};
 
     docsMap.forEach((doc) => {
       const data = doc.data();
@@ -87,13 +87,12 @@ router.get("/:userId", async (req: Request, res: Response) => {
       let clampedEnd = sessionEnd > end ? end : sessionEnd;
       if (clampedEnd <= clampedStart) return;
 
-      // Calculate minutes with proper rounding (like getFocusRange does)
-      const minutes = Math.round(clampedEnd.diff(clampedStart, "seconds").seconds / 60);
+      const seconds = Math.max(0, Math.floor(clampedEnd.diff(clampedStart, "seconds").seconds));
 
       if (!tagStats[activity]) {
-        tagStats[activity] = { totalMinutes: 0, sessionCount: 0 };
+        tagStats[activity] = { totalSeconds: 0, sessionCount: 0 };
       }
-      tagStats[activity].totalMinutes += minutes;
+      tagStats[activity].totalSeconds += seconds;
       tagStats[activity].sessionCount += 1;
     });
 
@@ -101,15 +100,20 @@ router.get("/:userId", async (req: Request, res: Response) => {
     const distribution = Object.entries(tagStats)
       .map(([tag, stats]) => ({
         tag,
-        totalMinutes: stats.totalMinutes,
+        totalSeconds: stats.totalSeconds,
+        totalMinutes: Math.round(stats.totalSeconds / 60),
         sessionCount: stats.sessionCount,
       }))
-      .sort((a, b) => b.totalMinutes - a.totalMinutes); // Sort by total minutes descending
+      .sort((a, b) => b.totalSeconds - a.totalSeconds); // Sort by total time descending
+
+    const totalSeconds = distribution.reduce((acc, d) => acc + (d.totalSeconds || 0), 0);
 
     return res.json({
       success: true,
       data: {
         distribution,
+        totalSeconds,
+        totalMinutes: Math.round(totalSeconds / 60),
         period: {
           start: start.toISO(),
           end: end.toISO(),
