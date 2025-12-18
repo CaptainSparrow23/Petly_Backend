@@ -21,7 +21,6 @@ import focusRangeRouter from './routes/insights/getFocusRange';
 import tagDistributionRouter from './routes/insights/getTagDistribution';
 import claimGoalRewardRoute from './routes/insights/claimGoalReward';
 import claimLevelRewardRoute from './routes/rewards/claimLevelReward';
-import { startDailyFocusCron } from './cron/computeDailyFocus';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import updateSelectedAccessoriesRoute from './routes/pets/updateSelectedAccessories';
@@ -66,8 +65,6 @@ app.use('/api/store', purchasePetRoute);
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
 app.use('/api/pets/update_accessories', updateSelectedAccessoriesRoute);
 app.use('/api/pets', getOwnedPetsRoute);
-
-startDailyFocusCron();
 
 // Start server
 app.listen(PORT, () => {

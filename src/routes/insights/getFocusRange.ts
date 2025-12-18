@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { DateTime } from "luxon";
+import { ensureDailyRollupsInRange, ensureMonthlyRollupsInRange, normalizeTz, listIsoDates } from "../../utils/rollups";
 
 const router = Router();
 const db = admin.firestore();
@@ -14,41 +15,6 @@ const parseDate = (value: unknown, zone: string) => {
   return dt.isValid ? dt : null;
 };
 
-const getFirestoreTimestamp = (date: Date) => admin.firestore.Timestamp.fromDate(date);
-
-async function fetchOverlappingFocusDocs(
-  userId: string,
-  start: ReturnType<typeof DateTime.now>,
-  end: ReturnType<typeof DateTime.now>
-) {
-  const focusCol = db.collection("users").doc(userId).collection("focus");
-
-  const startTimestamp = getFirestoreTimestamp(start.toJSDate());
-  const endTimestamp = getFirestoreTimestamp(end.toJSDate());
-
-  const [qStartSnap, qEndSnap] = await Promise.all([
-    focusCol.where("startTs", ">=", startTimestamp).where("startTs", "<=", endTimestamp).get(),
-    focusCol.where("endTs", ">=", startTimestamp).where("endTs", "<=", endTimestamp).get(),
-  ]);
-
-  const docsMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
-  qStartSnap.forEach((d) => docsMap.set(d.id, d));
-  qEndSnap.forEach((d) => docsMap.set(d.id, d));
-
-  return docsMap;
-}
-
-function getSessionRange(data: FirebaseFirestore.DocumentData, tz: string) {
-  const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
-  const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
-
-  const sessionStart = DateTime.fromJSDate(rawStart).setZone(tz);
-  const sessionEnd = DateTime.fromJSDate(rawEnd).setZone(tz);
-  if (!sessionStart.isValid || !sessionEnd.isValid || sessionEnd <= sessionStart) return null;
-
-  return { sessionStart, sessionEnd };
-}
-
 // --- Mode Handlers ---
 
 async function handleDayMode(userId: string, dateStr: string, tz: string) {
@@ -56,53 +22,33 @@ async function handleDayMode(userId: string, dateStr: string, tz: string) {
   if (!dayDt) throw new Error("Invalid or missing date");
 
   const start = dayDt.startOf("day");
-  const end = dayDt.endOf("day");
+  const endExclusive = start.plus({ days: 1 });
+  const dayId = start.toISODate()!;
 
-  // Initialize 24 hours
-  const hours = Array.from({ length: 24 }, (_, hour) => ({
-    key: `${hour}`,
-    label: `${String(hour).padStart(2, "0")}:00`,
-    totalMinutes: 0,
-    totalSeconds: 0,
-  }));
+  const docs = await ensureDailyRollupsInRange({ userId, tz, rangeStart: start, rangeEndExclusive: endExclusive });
+  const rollup = docs.get(dayId) as any | undefined;
+  const byHourSeconds = (rollup?.byHourSeconds ?? {}) as Record<string, unknown>;
 
-  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
-
-  docsMap.forEach((doc) => {
-    const data = doc.data();
-
-    const range = getSessionRange(data, tz);
-    if (!range) return;
-    let { sessionStart, sessionEnd } = range;
-
-    // Clamp session to the requested day
-    sessionStart = sessionStart < start ? start : sessionStart;
-    sessionEnd = sessionEnd > end ? end : sessionEnd;
-    if (sessionEnd <= sessionStart) return;
-
-    // Distribute seconds across hours
-    let cursor = sessionStart;
-    while (cursor < sessionEnd) {
-      const hourIdx = cursor.hour;
-      const nextHour = cursor.startOf("hour").plus({ hours: 1 });
-      const chunkEnd = sessionEnd < nextHour ? sessionEnd : nextHour;
-      
-      if (hours[hourIdx]) {
-        const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
-        hours[hourIdx].totalSeconds += seconds;
-      }
-      
-      cursor = chunkEnd;
-    }
+  const hours = Array.from({ length: 24 }, (_, hour) => {
+    const sec = Number(byHourSeconds[String(hour)] ?? 0) || 0;
+    return {
+      key: `${hour}`,
+      label: `${String(hour).padStart(2, "0")}:00`,
+      totalSeconds: sec,
+      totalMinutes: Math.round(sec / 60),
+    };
   });
 
-  const totalSeconds = hours.reduce((acc, h) => acc + (h.totalSeconds || 0), 0);
+  const totalSeconds =
+    typeof rollup?.totalSeconds === "number"
+      ? rollup.totalSeconds
+      : hours.reduce((acc, h) => acc + (h.totalSeconds || 0), 0);
 
   return {
     mode: "day",
     totalSeconds,
     totalMinutes: Math.round(totalSeconds / 60),
-    points: hours.map((h) => ({ ...h, totalMinutes: Math.round((h.totalSeconds || 0) / 60) })),
+    points: hours,
   };
 }
 
@@ -110,44 +56,27 @@ async function handleMonthMode(userId: string, year: number, month: number, tz: 
   if (!year || !month || month < 1 || month > 12) throw new Error("Invalid year or month");
 
   const start = DateTime.fromObject({ year, month, day: 1 }, { zone: tz }).startOf("day");
-  const end = start.endOf("month");
+  const endExclusive = start.plus({ months: 1 });
+  const now = DateTime.now().setZone(tz);
+  const startOfTomorrow = now.startOf("day").plus({ days: 1 });
+  const effectiveEndExclusive = endExclusive > startOfTomorrow ? startOfTomorrow : endExclusive;
 
-  const points = Array.from({ length: end.day }, (_, idx) => {
-    const current = start.plus({ days: idx });
-    const iso = current.toISODate()!;
-    return {
-      key: iso,
-      label: String(idx + 1),
-      totalMinutes: 0,
-      totalSeconds: 0,
-    };
+  const rollups = await ensureDailyRollupsInRange({
+    userId,
+    tz,
+    rangeStart: start,
+    rangeEndExclusive: effectiveEndExclusive,
   });
-
-  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
-
-  docsMap.forEach((doc) => {
-    const data = doc.data();
-    const range = getSessionRange(data, tz);
-    if (!range) return;
-    let { sessionStart, sessionEnd } = range;
-
-    // Clamp to the requested time range
-    sessionStart = sessionStart < start ? start : sessionStart;
-    sessionEnd = sessionEnd > end ? end : sessionEnd;
-    if (sessionEnd <= sessionStart) return;
-
-    let cursor = sessionStart;
-    while (cursor < sessionEnd) {
-      const dayIdx = cursor.day - 1;
-      const nextDay = cursor.startOf("day").plus({ days: 1 });
-      const chunkEnd = sessionEnd < nextDay ? sessionEnd : nextDay;
-
-      const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
-      if (points[dayIdx]) {
-        points[dayIdx].totalSeconds += seconds;
-      }
-      cursor = chunkEnd;
-    }
+  const dayIds = listIsoDates(start, endExclusive);
+  const points = dayIds.map((dayId, idx) => {
+    const doc = rollups.get(dayId) as any | undefined;
+    const totalSeconds = typeof doc?.totalSeconds === "number" ? doc.totalSeconds : 0;
+    return {
+      key: dayId,
+      label: String(idx + 1),
+      totalSeconds,
+      totalMinutes: Math.round(totalSeconds / 60),
+    };
   });
 
   const totalSeconds = points.reduce((acc, p) => acc + (p.totalSeconds || 0), 0);
@@ -156,7 +85,7 @@ async function handleMonthMode(userId: string, year: number, month: number, tz: 
     mode: "month",
     totalSeconds,
     totalMinutes: Math.round(totalSeconds / 60),
-    points: points.map((p) => ({ ...p, totalMinutes: Math.round((p.totalSeconds || 0) / 60) })),
+    points,
   };
 }
 
@@ -164,40 +93,27 @@ async function handleYearMode(userId: string, year: number, tz: string) {
   if (!year) throw new Error("Invalid year");
 
   const start = DateTime.fromObject({ year, month: 1, day: 1 }, { zone: tz }).startOf("day");
-  const end = start.endOf("year");
+  const endExclusive = start.plus({ years: 1 });
+  const now = DateTime.now().setZone(tz);
+  const nextMonthStart = now.startOf("month").plus({ months: 1 });
+  const effectiveEndExclusive = year === now.year && nextMonthStart < endExclusive ? nextMonthStart : endExclusive;
 
-  const points = Array.from({ length: 12 }, (_, idx) => ({
-    key: `${year}-${idx + 1}`,
-    label: MONTH_NAMES[idx],
-    totalMinutes: 0,
-    totalSeconds: 0,
-  }));
-
-  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
-
-  docsMap.forEach((doc) => {
-    const data = doc.data();
-    const range = getSessionRange(data, tz);
-    if (!range) return;
-    let { sessionStart, sessionEnd } = range;
-
-    // Clamp to the requested time range
-    sessionStart = sessionStart < start ? start : sessionStart;
-    sessionEnd = sessionEnd > end ? end : sessionEnd;
-    if (sessionEnd <= sessionStart) return;
-
-    let cursor = sessionStart;
-    while (cursor < sessionEnd) {
-      const monthIdx = cursor.month - 1;
-      const nextMonth = cursor.startOf("month").plus({ months: 1 });
-      const chunkEnd = sessionEnd < nextMonth ? sessionEnd : nextMonth;
-
-      const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
-      if (points[monthIdx]) {
-        points[monthIdx].totalSeconds += seconds;
-      }
-      cursor = chunkEnd;
-    }
+  const rollups = await ensureMonthlyRollupsInRange({
+    userId,
+    tz,
+    rangeStart: start,
+    rangeEndExclusive: effectiveEndExclusive,
+  });
+  const points = Array.from({ length: 12 }, (_, idx) => {
+    const monthId = `${year}-${String(idx + 1).padStart(2, "0")}`;
+    const doc = rollups.get(monthId) as any | undefined;
+    const totalSeconds = typeof doc?.totalSeconds === "number" ? doc.totalSeconds : 0;
+    return {
+      key: monthId,
+      label: MONTH_NAMES[idx],
+      totalSeconds,
+      totalMinutes: Math.round(totalSeconds / 60),
+    };
   });
 
   const totalSeconds = points.reduce((acc, p) => acc + (p.totalSeconds || 0), 0);
@@ -206,7 +122,7 @@ async function handleYearMode(userId: string, year: number, tz: string) {
     mode: "year",
     totalSeconds,
     totalMinutes: Math.round(totalSeconds / 60),
-    points: points.map((p) => ({ ...p, totalMinutes: Math.round((p.totalSeconds || 0) / 60) })),
+    points,
   };
 }
 
@@ -216,7 +132,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const mode = (req.query.mode as string) ?? "day";
-    const tz = (req.query.tz as string) || "Europe/London";
+    const tz = normalizeTz(req.query.tz as string | undefined);
 
     if (!userId) {
       return res.status(400).json({ success: false, error: "Missing userId" });
