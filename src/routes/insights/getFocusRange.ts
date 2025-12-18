@@ -26,10 +26,26 @@ async function handleDayMode(userId: string, dateStr: string, tz: string) {
   const end = dayDt.endOf("day");
 
   const focusCol = db.collection("users").doc(userId).collection("focus");
-  const snap = await focusCol
-    .where("startTs", ">=", getFirestoreTimestamp(start.toJSDate()))
-    .where("startTs", "<=", getFirestoreTimestamp(end.toJSDate()))
-    .get();
+  
+  // Query sessions that START in the range OR END in the range (to catch sessions spanning boundaries)
+  const startTimestamp = getFirestoreTimestamp(start.toJSDate());
+  const endTimestamp = getFirestoreTimestamp(end.toJSDate());
+  
+  const [qStartSnap, qEndSnap] = await Promise.all([
+    focusCol
+      .where("startTs", ">=", startTimestamp)
+      .where("startTs", "<=", endTimestamp)
+      .get(),
+    focusCol
+      .where("endTs", ">=", startTimestamp)
+      .where("endTs", "<=", endTimestamp)
+      .get(),
+  ]);
+
+  // Merge both result sets to avoid duplicates
+  const docsMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+  qStartSnap.forEach((d) => docsMap.set(d.id, d));
+  qEndSnap.forEach((d) => docsMap.set(d.id, d));
 
   // Initialize 24 hours
   const hours = Array.from({ length: 24 }, (_, hour) => ({
@@ -38,7 +54,7 @@ async function handleDayMode(userId: string, dateStr: string, tz: string) {
     totalMinutes: 0,
   }));
 
-  snap.forEach((doc) => {
+  docsMap.forEach((doc) => {
     const data = doc.data();
     const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
     const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
