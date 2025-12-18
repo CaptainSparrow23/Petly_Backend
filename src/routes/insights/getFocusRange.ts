@@ -16,6 +16,39 @@ const parseDate = (value: unknown, zone: string) => {
 
 const getFirestoreTimestamp = (date: Date) => admin.firestore.Timestamp.fromDate(date);
 
+async function fetchOverlappingFocusDocs(
+  userId: string,
+  start: ReturnType<typeof DateTime.now>,
+  end: ReturnType<typeof DateTime.now>
+) {
+  const focusCol = db.collection("users").doc(userId).collection("focus");
+
+  const startTimestamp = getFirestoreTimestamp(start.toJSDate());
+  const endTimestamp = getFirestoreTimestamp(end.toJSDate());
+
+  const [qStartSnap, qEndSnap] = await Promise.all([
+    focusCol.where("startTs", ">=", startTimestamp).where("startTs", "<=", endTimestamp).get(),
+    focusCol.where("endTs", ">=", startTimestamp).where("endTs", "<=", endTimestamp).get(),
+  ]);
+
+  const docsMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+  qStartSnap.forEach((d) => docsMap.set(d.id, d));
+  qEndSnap.forEach((d) => docsMap.set(d.id, d));
+
+  return docsMap;
+}
+
+function getSessionRange(data: FirebaseFirestore.DocumentData, tz: string) {
+  const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
+  const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
+
+  const sessionStart = DateTime.fromJSDate(rawStart).setZone(tz);
+  const sessionEnd = DateTime.fromJSDate(rawEnd).setZone(tz);
+  if (!sessionStart.isValid || !sessionEnd.isValid || sessionEnd <= sessionStart) return null;
+
+  return { sessionStart, sessionEnd };
+}
+
 // --- Mode Handlers ---
 
 async function handleDayMode(userId: string, dateStr: string, tz: string) {
@@ -25,69 +58,51 @@ async function handleDayMode(userId: string, dateStr: string, tz: string) {
   const start = dayDt.startOf("day");
   const end = dayDt.endOf("day");
 
-  const focusCol = db.collection("users").doc(userId).collection("focus");
-  
-  // Query sessions that START in the range OR END in the range (to catch sessions spanning boundaries)
-  const startTimestamp = getFirestoreTimestamp(start.toJSDate());
-  const endTimestamp = getFirestoreTimestamp(end.toJSDate());
-  
-  const [qStartSnap, qEndSnap] = await Promise.all([
-    focusCol
-      .where("startTs", ">=", startTimestamp)
-      .where("startTs", "<=", endTimestamp)
-      .get(),
-    focusCol
-      .where("endTs", ">=", startTimestamp)
-      .where("endTs", "<=", endTimestamp)
-      .get(),
-  ]);
-
-  // Merge both result sets to avoid duplicates
-  const docsMap = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
-  qStartSnap.forEach((d) => docsMap.set(d.id, d));
-  qEndSnap.forEach((d) => docsMap.set(d.id, d));
-
   // Initialize 24 hours
   const hours = Array.from({ length: 24 }, (_, hour) => ({
     key: `${hour}`,
     label: `${String(hour).padStart(2, "0")}:00`,
     totalMinutes: 0,
+    totalSeconds: 0,
   }));
+
+  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
 
   docsMap.forEach((doc) => {
     const data = doc.data();
-    const rawStart = data.startTs?.toDate?.() ?? new Date(data.startTs ?? 0);
-    const rawEnd = data.endTs?.toDate?.() ?? new Date(data.endTs ?? data.startTs ?? 0);
 
-    let sessionStart = DateTime.fromJSDate(rawStart).setZone(tz);
-    let sessionEnd = DateTime.fromJSDate(rawEnd).setZone(tz);
-
-    if (!sessionStart.isValid || !sessionEnd.isValid || sessionEnd <= sessionStart) return;
+    const range = getSessionRange(data, tz);
+    if (!range) return;
+    let { sessionStart, sessionEnd } = range;
 
     // Clamp session to the requested day
     sessionStart = sessionStart < start ? start : sessionStart;
     sessionEnd = sessionEnd > end ? end : sessionEnd;
     if (sessionEnd <= sessionStart) return;
 
-    // Distribute minutes across hours
+    // Distribute seconds across hours
     let cursor = sessionStart;
     while (cursor < sessionEnd) {
       const hourIdx = cursor.hour;
       const nextHour = cursor.startOf("hour").plus({ hours: 1 });
       const chunkEnd = sessionEnd < nextHour ? sessionEnd : nextHour;
       
-      const minutes = chunkEnd.diff(cursor, "seconds").seconds / 60;
       if (hours[hourIdx]) {
-        hours[hourIdx].totalMinutes += minutes;
+        const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
+        hours[hourIdx].totalSeconds += seconds;
       }
       
       cursor = chunkEnd;
     }
   });
 
+  const totalSeconds = hours.reduce((acc, h) => acc + (h.totalSeconds || 0), 0);
+
   return {
     mode: "day",
-    points: hours.map((h) => ({ ...h, totalMinutes: Math.round(h.totalMinutes) })),
+    totalSeconds,
+    totalMinutes: Math.round(totalSeconds / 60),
+    points: hours.map((h) => ({ ...h, totalMinutes: Math.round((h.totalSeconds || 0) / 60) })),
   };
 }
 
@@ -97,30 +112,52 @@ async function handleMonthMode(userId: string, year: number, month: number, tz: 
   const start = DateTime.fromObject({ year, month, day: 1 }, { zone: tz }).startOf("day");
   const end = start.endOf("month");
 
-  const dailyCol = db.collection("users").doc(userId).collection("dailyFocus");
-  const docs = await dailyCol
-    .where("date", ">=", start.toISODate())
-    .where("date", "<=", end.toISODate())
-    .orderBy("date")
-    .get();
-
-  const byDate = new Map<string, FirebaseFirestore.DocumentData>();
-  docs.forEach((doc) => byDate.set(String(doc.get("date") || doc.id), doc.data()));
-
   const points = Array.from({ length: end.day }, (_, idx) => {
     const current = start.plus({ days: idx });
     const iso = current.toISODate()!;
-    const match = byDate.get(iso);
-    const minutes = match ? Math.floor((Number(match.totalDurationSec) || 0) / 60) : 0;
-    
     return {
       key: iso,
       label: String(idx + 1),
-      totalMinutes: minutes,
+      totalMinutes: 0,
+      totalSeconds: 0,
     };
   });
 
-  return { mode: "month", points };
+  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
+
+  docsMap.forEach((doc) => {
+    const data = doc.data();
+    const range = getSessionRange(data, tz);
+    if (!range) return;
+    let { sessionStart, sessionEnd } = range;
+
+    // Clamp to the requested time range
+    sessionStart = sessionStart < start ? start : sessionStart;
+    sessionEnd = sessionEnd > end ? end : sessionEnd;
+    if (sessionEnd <= sessionStart) return;
+
+    let cursor = sessionStart;
+    while (cursor < sessionEnd) {
+      const dayIdx = cursor.day - 1;
+      const nextDay = cursor.startOf("day").plus({ days: 1 });
+      const chunkEnd = sessionEnd < nextDay ? sessionEnd : nextDay;
+
+      const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
+      if (points[dayIdx]) {
+        points[dayIdx].totalSeconds += seconds;
+      }
+      cursor = chunkEnd;
+    }
+  });
+
+  const totalSeconds = points.reduce((acc, p) => acc + (p.totalSeconds || 0), 0);
+
+  return {
+    mode: "month",
+    totalSeconds,
+    totalMinutes: Math.round(totalSeconds / 60),
+    points: points.map((p) => ({ ...p, totalMinutes: Math.round((p.totalSeconds || 0) / 60) })),
+  };
 }
 
 async function handleYearMode(userId: string, year: number, tz: string) {
@@ -129,30 +166,48 @@ async function handleYearMode(userId: string, year: number, tz: string) {
   const start = DateTime.fromObject({ year, month: 1, day: 1 }, { zone: tz }).startOf("day");
   const end = start.endOf("year");
 
-  const dailyCol = db.collection("users").doc(userId).collection("dailyFocus");
-  const docs = await dailyCol
-    .where("date", ">=", start.toISODate())
-    .where("date", "<=", end.toISODate())
-    .orderBy("date")
-    .get();
-
-  const monthTotals = Array(12).fill(0);
-  docs.forEach((doc) => {
-    const dateStr = String(doc.get("date") || doc.id);
-    const dt = DateTime.fromISO(dateStr, { zone: tz });
-    if (!dt.isValid) return;
-    
-    const minutes = Math.floor((Number(doc.get("totalDurationSec")) || 0) / 60);
-    monthTotals[dt.month - 1] += minutes;
-  });
-
-  const points = monthTotals.map((minutes, idx) => ({
+  const points = Array.from({ length: 12 }, (_, idx) => ({
     key: `${year}-${idx + 1}`,
     label: MONTH_NAMES[idx],
-    totalMinutes: minutes,
+    totalMinutes: 0,
+    totalSeconds: 0,
   }));
 
-  return { mode: "year", points };
+  const docsMap = await fetchOverlappingFocusDocs(userId, start, end);
+
+  docsMap.forEach((doc) => {
+    const data = doc.data();
+    const range = getSessionRange(data, tz);
+    if (!range) return;
+    let { sessionStart, sessionEnd } = range;
+
+    // Clamp to the requested time range
+    sessionStart = sessionStart < start ? start : sessionStart;
+    sessionEnd = sessionEnd > end ? end : sessionEnd;
+    if (sessionEnd <= sessionStart) return;
+
+    let cursor = sessionStart;
+    while (cursor < sessionEnd) {
+      const monthIdx = cursor.month - 1;
+      const nextMonth = cursor.startOf("month").plus({ months: 1 });
+      const chunkEnd = sessionEnd < nextMonth ? sessionEnd : nextMonth;
+
+      const seconds = Math.max(0, Math.floor(chunkEnd.diff(cursor, "seconds").seconds));
+      if (points[monthIdx]) {
+        points[monthIdx].totalSeconds += seconds;
+      }
+      cursor = chunkEnd;
+    }
+  });
+
+  const totalSeconds = points.reduce((acc, p) => acc + (p.totalSeconds || 0), 0);
+
+  return {
+    mode: "year",
+    totalSeconds,
+    totalMinutes: Math.round(totalSeconds / 60),
+    points: points.map((p) => ({ ...p, totalMinutes: Math.round((p.totalSeconds || 0) / 60) })),
+  };
 }
 
 // --- Main Route ---
