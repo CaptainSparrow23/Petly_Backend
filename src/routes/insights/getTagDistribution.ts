@@ -46,15 +46,31 @@ router.get("/:userId", async (req: Request, res: Response) => {
     }
 
     const focusCol = db.collection("users").doc(userId).collection("focus");
-    const snap = await focusCol
-      .where("startTs", ">=", admin.firestore.Timestamp.fromDate(start.toJSDate()))
-      .where("startTs", "<=", admin.firestore.Timestamp.fromDate(end.toJSDate()))
-      .get();
+    
+    // Query sessions that START in the range OR END in the range (to catch sessions spanning boundaries)
+    const startTimestamp = admin.firestore.Timestamp.fromDate(start.toJSDate());
+    const endTimestamp = admin.firestore.Timestamp.fromDate(end.toJSDate());
+    
+    const [qStartSnap, qEndSnap] = await Promise.all([
+      focusCol
+        .where("startTs", ">=", startTimestamp)
+        .where("startTs", "<=", endTimestamp)
+        .get(),
+      focusCol
+        .where("endTs", ">=", startTimestamp)
+        .where("endTs", "<=", endTimestamp)
+        .get(),
+    ]);
+
+    // Merge both result sets to avoid duplicates
+    const docsMap = new Map<string, admin.firestore.QueryDocumentSnapshot>();
+    qStartSnap.forEach((d) => docsMap.set(d.id, d));
+    qEndSnap.forEach((d) => docsMap.set(d.id, d));
 
     // Aggregate by activity/tag
     const tagStats: Record<string, { totalMinutes: number; sessionCount: number }> = {};
 
-    snap.forEach((doc) => {
+    docsMap.forEach((doc) => {
       const data = doc.data();
       const activity = data.activity || "Unknown";
 
@@ -71,7 +87,8 @@ router.get("/:userId", async (req: Request, res: Response) => {
       let clampedEnd = sessionEnd > end ? end : sessionEnd;
       if (clampedEnd <= clampedStart) return;
 
-      const minutes = Math.floor(clampedEnd.diff(clampedStart, "seconds").seconds / 60);
+      // Calculate minutes with proper rounding (like getFocusRange does)
+      const minutes = Math.round(clampedEnd.diff(clampedStart, "seconds").seconds / 60);
 
       if (!tagStats[activity]) {
         tagStats[activity] = { totalMinutes: 0, sessionCount: 0 };
