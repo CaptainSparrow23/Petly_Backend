@@ -17,7 +17,6 @@ const LEVEL_GADGET_REWARDS: Record<number, string[]> = {
 const CATEGORY_TO_FIELD: Record<string, keyof FirebaseFirestore.DocumentData> = {
   Pet: 'ownedPets',
   Hat: 'ownedHats',
-  Face: 'ownedFaces',
   Collar: 'ownedCollars',
   Gadget: 'ownedGadgets',
 };

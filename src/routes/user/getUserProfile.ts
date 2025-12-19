@@ -94,9 +94,6 @@ router.get('/:userId', async (req: Request, res: Response) => {
       ownedHats: Array.isArray(userData?.ownedHats)
         ? (userData.ownedHats as string[])
         : [],
-      ownedFaces: Array.isArray(userData?.ownedFaces)
-        ? (userData.ownedFaces as string[])
-        : [],
       ownedCollars: Array.isArray(userData?.ownedCollars)
         ? (userData.ownedCollars as string[])
         : [],
@@ -104,7 +101,6 @@ router.get('/:userId', async (req: Request, res: Response) => {
         ? (userData.ownedGadgets as string[])
         : ['gadget_laptop'],
       selectedHat: userData?.selectedHat ?? null,
-      selectedFace: userData?.selectedFace ?? null,
       selectedCollar: userData?.selectedCollar ?? null,
       selectedGadget: userData?.selectedGadget ?? 'gadget_laptop',
       selectedTag: userData?.selectedTag ?? null,

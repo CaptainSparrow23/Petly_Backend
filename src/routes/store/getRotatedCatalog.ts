@@ -14,7 +14,6 @@ const db = admin.firestore();
 // Number of items to show per category
 const ITEMS_PER_CATEGORY = {
   Hat: 3,
-  Face: 3,
   Collar: 3,
 };
 
@@ -23,7 +22,6 @@ type RotatableCategory = keyof typeof ITEMS_PER_CATEGORY;
 // Map category to user's owned field
 const categoryToOwnedField: Record<RotatableCategory, string> = {
   Hat: 'ownedHats',
-  Face: 'ownedFaces',
   Collar: 'ownedCollars',
 };
 
@@ -31,7 +29,6 @@ interface RotatedCatalogResponse {
   success: boolean;
   data?: {
     hats: StoreCatalogEntry[];
-    faces: StoreCatalogEntry[];
     collars: StoreCatalogEntry[];
     nextRefreshTimestamp: number;
     weekKey: string;
@@ -64,9 +61,8 @@ router.get('/rotated-catalog/:userId', async (req: Request, res: Response) => {
 
     // Collect all owned item IDs
     const ownedHats: string[] = Array.isArray(userData?.ownedHats) ? userData.ownedHats : [];
-    const ownedFaces: string[] = Array.isArray(userData?.ownedFaces) ? userData.ownedFaces : [];
     const ownedCollars: string[] = Array.isArray(userData?.ownedCollars) ? userData.ownedCollars : [];
-    const ownedIds = new Set([...ownedHats, ...ownedFaces, ...ownedCollars]);
+    const ownedIds = new Set([...ownedHats, ...ownedCollars]);
 
     // Get current week key and generate master seed
     const weekKey = getWeekKey();
@@ -75,7 +71,6 @@ router.get('/rotated-catalog/:userId', async (req: Request, res: Response) => {
     // Filter catalog by category and exclude owned items
     const availableByCategory: Record<RotatableCategory, StoreCatalogEntry[]> = {
       Hat: storeCatalog.filter(item => item.category === 'Hat' && !ownedIds.has(item.id)),
-      Face: storeCatalog.filter(item => item.category === 'Face' && !ownedIds.has(item.id)),
       Collar: storeCatalog.filter(item => item.category === 'Collar' && !ownedIds.has(item.id)),
     };
 
@@ -88,7 +83,6 @@ router.get('/rotated-catalog/:userId', async (req: Request, res: Response) => {
     };
 
     const hats = selectForCategory('Hat');
-    const faces = selectForCategory('Face');
     const collars = selectForCategory('Collar');
 
     const nextRefreshTimestamp = getNextRefreshTimestamp();
@@ -97,7 +91,6 @@ router.get('/rotated-catalog/:userId', async (req: Request, res: Response) => {
       success: true,
       data: {
         hats,
-        faces,
         collars,
         nextRefreshTimestamp,
         weekKey,

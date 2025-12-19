@@ -13,7 +13,6 @@ interface PurchasePayload {
 const categoryToField: Record<string, string> = {
   Pet: 'ownedPets',
   Hat: 'ownedHats',
-  Face: 'ownedFaces',
   Collar: 'ownedCollars',
   Gadget: 'ownedGadgets',
 };
