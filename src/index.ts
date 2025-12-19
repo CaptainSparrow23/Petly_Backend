@@ -16,6 +16,7 @@ import saveUserInfoRoute from './routes/user/saveUserInfo';
 import storeCatalogRoute from './routes/store/getStoreCatalog';
 import rotatedCatalogRoute from './routes/store/getRotatedCatalog';
 import purchasePetRoute from './routes/store/purchasePet';
+import featuredSetsRoute from './routes/store/getFeaturedSets';
 import getStreak from './routes/insights/checkAndGetStreak';
 import getGoals from './routes/insights/getGoals';
 import focusRangeRouter from './routes/insights/getFocusRange';
@@ -63,6 +64,7 @@ app.use('/api/auth', saveUserInfoRoute);
 app.use('/api/store', storeCatalogRoute);
 app.use('/api/store', rotatedCatalogRoute);
 app.use('/api/store', purchasePetRoute);
+app.use('/api/store', featuredSetsRoute);
 
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
 app.use('/api/pets/update_accessories', updateSelectedAccessoriesRoute);

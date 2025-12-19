@@ -233,6 +233,7 @@
     "id": "gadget_pot_and_stove",
     "name": "Pot and Stove",
     "category": "Gadget",
+    "featured": true,
     "priceCoins": 320,
     "imageKey": "gadget_pot_and_stove",
     "description": "Emits a soothing pulse to keep your sessions relaxed."
