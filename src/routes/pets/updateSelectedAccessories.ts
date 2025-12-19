@@ -5,7 +5,6 @@ const router = Router();
 
 interface UpdateAccessoriesBody {
   selectedHat?: string | null;
-  selectedFace?: string | null;
   selectedCollar?: string | null;
   selectedGadget?: string | null;
   selectedTag?: string | null;
@@ -13,7 +12,7 @@ interface UpdateAccessoriesBody {
 
 router.put('/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const { selectedHat, selectedFace, selectedCollar, selectedGadget, selectedTag } = req.body as UpdateAccessoriesBody;
+  const { selectedHat, selectedCollar, selectedGadget, selectedTag } = req.body as UpdateAccessoriesBody;
 
   console.log(`🎀 Received request to update accessories for user ${userId}`);
 
@@ -25,7 +24,7 @@ router.put('/:userId', async (req: Request, res: Response) => {
   }
 
   // At least one accessory should be provided
-  if (selectedHat === undefined && selectedFace === undefined && selectedCollar === undefined && selectedGadget === undefined && selectedTag === undefined) {
+  if (selectedHat === undefined && selectedCollar === undefined && selectedGadget === undefined && selectedTag === undefined) {
     return res.status(400).json({
       success: false,
       error: 'No accessories provided to update',
@@ -50,9 +49,6 @@ router.put('/:userId', async (req: Request, res: Response) => {
     
     if (selectedHat !== undefined) {
       updateData.selectedHat = selectedHat;
-    }
-    if (selectedFace !== undefined) {
-      updateData.selectedFace = selectedFace;
     }
     if (selectedCollar !== undefined) {
       updateData.selectedCollar = selectedCollar;
