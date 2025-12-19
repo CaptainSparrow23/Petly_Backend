@@ -45,7 +45,7 @@
     "category": "Hat",
     "priceCoins": 240,
     "imageKey": "hat_beanie_minty",
-    "description": "Soft brim, warm tones\u2014perfect for morning focus sprints."
+    "description": "Soft brim, warm tones—perfect for morning focus sprints."
   },
   {
     "id": "hat_beanie_sunset",
@@ -69,7 +69,7 @@
     "category": "Hat",
     "priceCoins": 220,
     "imageKey": "hat_beanie_snow",
-    "description": "Lightweight band that says \u201clet\u2019s get this done.\u201d"
+    "description": "Lightweight band that says "let's get this done.""
   },
   {
     "id": "hat_bucket_hat",
@@ -99,6 +99,7 @@
     "id": "hat_top_hat_red",
     "name": "Red Top Hat",
     "category": "Hat",
+    "featured": true,
     "priceCoins": 100,
     "imageKey": "hat_top_hat_red",
     "description": "Formal attire with a bit of flair to elevate your focus game."
@@ -107,16 +108,18 @@
     "id": "hat_top_hat_silk",
     "name": "Silk Top Hat",
     "category": "Hat",
+    "featured": true,
     "priceCoins": 100,
     "imageKey": "hat_top_hat_silk",
     "description": "Perfect for adding a touch of formality to your focus sessions."
   },
   {
-    "id": "hat_special_toque_blanche",
+    "id": "hat_toque_blanche",
     "name": "Toque Blanche",
     "category": "Hat",
+    "featured": true,
     "priceCoins": 100,
-    "imageKey": "hat_special_toque_blanche",
+    "imageKey": "hat_toque_blanche",
     "description": "Traditional chef's hat to keep you focused in the kitchen."
   },
   {
@@ -195,6 +198,7 @@
     "id": "collar_bow_tie_red",
     "name": "Red Bow Tie",
     "category": "Collar",
+    "featured": true,
     "priceCoins": 220,
     "imageKey": "collar_bow_tie_red",
     "description": "Smart looking red bow tie to add a touch of elegance."
@@ -203,17 +207,27 @@
     "id": "collar_bow_tie_silk",
     "name": "Silk Bow Tie",
     "category": "Collar",
+    "featured": true,
     "priceCoins": 220,
     "imageKey": "collar_bow_tie_silk",
     "description": "Elegant silk bow tie for a refined, focused appearance."
   },
   {
-    "id": "collar_special_chefs_coat",
+    "id": "collar_chefs_coat",
     "name": "Chef's Coat",
     "category": "Collar",
+    "featured": true,
     "priceCoins": 220,
-    "imageKey": "collar_special_chefs_coat",
+    "imageKey": "collar_chefs_coat",
     "description": "Professional chef's coat to inspire culinary focus."
+  },
+  {
+    "id": "collar_wings_fairy",
+    "name": "Fairy Wings",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_wings_fairy",
+    "description": "Fairy wings to add a touch of magic to your focus sessions."
   },
   {
     "id": "gadget_pot_and_stove",
@@ -238,13 +252,5 @@
     "priceCoins": 420,
     "imageKey": "gadget_cello_artisan",
     "description": "An artisan cello to help you focus and relax."
-  },
-  {
-    "id": "face_sun_glasses",
-    "name": "Sunglasses",
-    "category": "Face",
-    "priceCoins": 320,
-    "imageKey": "face_sun_glasses",
-    "description": "Stylish shades to keep your focus cool and collected."
   }
 ]
