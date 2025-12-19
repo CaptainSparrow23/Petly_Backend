@@ -1,6 +1,6 @@
 import catalogData from './storeCatalog.json';
 
-export type StoreCategory = 'Pet' | 'Hat' | 'Collar' | 'Gadget' | 'Face';
+export type StoreCategory = 'Pet' | 'Hat' | 'Collar' | 'Gadget';
 
 export interface StoreCatalogEntry {
   id: string;
@@ -9,6 +9,7 @@ export interface StoreCatalogEntry {
   priceCoins: number;
   imageKey: string;
   description: string;
+  featured?: boolean;
 }
 
 // Data is stored in storeCatalog.json - edit that file to update items
