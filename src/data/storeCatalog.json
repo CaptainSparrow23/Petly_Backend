@@ -254,6 +254,22 @@
     "description": "Red bandana to add a touch of style to your focus sessions."
   },
   {
+    "id": "collar_bandana_desert",
+    "name": "Desert Bandana",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_bandana_desert",
+    "description": "Desert bandana to add a touch of style to your focus sessions."
+  },
+  {
+    "id": "collar_bandana_forest",
+    "name": "Forest Bandana",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_bandana_forest",
+    "description": "Forest bandana to add a touch of style to your focus sessions."
+  },
+  {
     "id": "gadget_pot_and_stove",
     "name": "Pot and Stove",
     "category": "Gadget",
