@@ -195,6 +195,14 @@
     "description": "Bold red band to fuel your drive to succeed."
   },
   {
+    "id": "collar_standard_dream ",
+    "name": "Dream Collar",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_standard_dream",
+    "description": "Dream collar to add a touch of magic to your focus sessions."
+  },
+  {
     "id": "collar_bow_tie_red",
     "name": "Red Bow Tie",
     "category": "Collar",
