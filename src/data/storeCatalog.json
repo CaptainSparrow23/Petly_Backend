@@ -230,6 +230,22 @@
     "description": "Fairy wings to add a touch of magic to your focus sessions."
   },
   {
+    "id": "collar_bandana_navy",
+    "name": "Navy Bandana",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_bandana_navy",
+    "description": "Navy bandana to add a touch of style to your focus sessions."
+  },
+  {
+    "id": "collar_bandana_red",
+    "name": "Red Bandana",
+    "category": "Collar",
+    "priceCoins": 220,
+    "imageKey": "collar_bandana_red",
+    "description": "Red bandana to add a touch of style to your focus sessions."
+  },
+  {
     "id": "gadget_pot_and_stove",
     "name": "Pot and Stove",
     "category": "Gadget",
