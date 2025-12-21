@@ -5,5 +5,12 @@
     "description": "In a warm, quiet kitchen, a small chef cooks with patience and care. Each step is measured, never rushed, as simple ingredients slowly come together. Like good food, focus is made gently, one moment at a time.",
     "artKey": "featured_set_chef",
     "itemIds": ["hat_toque_blanche", "collar_chefs_coat", "gadget_pot_and_stove"]
+  },
+  {
+    "id": "composer_set",
+    "title": "The quiet before the melody, unheard compositions",
+    "description": "Long after the room has emptied, the musician remains. Alone with his scores, he plays through tired hands and heavy pauses. Progress is slow, lonely, and unseen; but every note carries him forward.",
+    "artKey": "featured_set_composer",
+    "itemIds": ["hat_wig_composer", "collar_attire_composer", "gadget_cello_classic"]
   }
 ]

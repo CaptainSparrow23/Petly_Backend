@@ -139,6 +139,15 @@
     "description": "An elegant blue flower for a special occasion."
   },
   {
+    "id": "hat_wig_composer",
+    "name": "Composer Wig",
+    "category": "Hat",
+    "featured": true,
+    "priceCoins": 100,
+    "imageKey": "hat_wig_composer",
+    "description": "A wig for a composer to add a touch of style to your focus sessions."
+  },
+  {
     "id": "collar_scarf_minty",
     "name": "Minty Scarf",
     "category": "Collar",
@@ -270,6 +279,15 @@
     "description": "Forest bandana to add a touch of style to your focus sessions."
   },
   {
+    "id": "collar_attire_composer",
+    "name": "Composer Attire",
+    "category": "Collar",
+    "featured": true,
+    "priceCoins": 220,
+    "imageKey": "collar_attire_composer",
+    "description": "Attire for a composer to add a touch of style to your focus sessions."
+  },
+  {
     "id": "gadget_pot_and_stove",
     "name": "Pot and Stove",
     "category": "Gadget",
@@ -287,11 +305,12 @@
     "description": "Nothing to see just a 9 year old laptop."
   },
   {
-    "id": "gadget_cello_artisan",
-    "name": "Artisan Cello",
+    "id": "gadget_cello_classic",
+    "name": "Classic Cello",
+    "featured": true,
     "category": "Gadget",
     "priceCoins": 420,
-    "imageKey": "gadget_cello_artisan",
-    "description": "An artisan cello to help you focus and relax."
+    "imageKey": "gadget_cello_classic",
+    "description": "A classic cello to help you focus and relax."
   }
 ]
