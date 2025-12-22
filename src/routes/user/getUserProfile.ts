@@ -36,12 +36,13 @@ router.get('/:userId', async (req: Request, res: Response) => {
 
     // Fetch pet friendship XP (subcollection)
     const petFriendshipsSnap = await userRef.collection('petFriendships').get();
-    const petFriendships: Record<string, { totalXP: number; totalFocusSeconds: number }> = {};
+    const petFriendships: Record<string, { totalXP: number; totalFocusSeconds: number; updatedAt: string | null }> = {};
     petFriendshipsSnap.forEach((doc) => {
       const d = doc.data() as any;
       petFriendships[doc.id] = { 
         totalXP: toNumber(d?.totalXP),
-        totalFocusSeconds: toNumber(d?.totalFocusSeconds, 0)
+        totalFocusSeconds: toNumber(d?.totalFocusSeconds, 0),
+        updatedAt: d?.updatedAt?.toDate?.()?.toISOString() ?? null,
       };
     });
 
