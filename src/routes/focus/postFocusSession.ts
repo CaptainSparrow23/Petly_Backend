@@ -74,18 +74,27 @@ async function incrementRollupsForSession(opts: {
 
   for (const [dayId, agg] of byDay.entries()) {
     const dailyRef = userRef.collection("dailyRollups").doc(dayId);
+    
+    // Build byHourSeconds as a proper nested object for correct Firestore merge
+    const byHourSecondsUpdate: Record<string, FirebaseFirestore.FieldValue> = {};
+    agg.byHourSeconds.forEach((sec, hourIdx) => {
+      if (!sec) return;
+      byHourSecondsUpdate[String(hourIdx)] = admin.firestore.FieldValue.increment(sec);
+    });
+
+    // Build byTagSeconds as a proper nested object
+    const byTagSecondsUpdate: Record<string, FirebaseFirestore.FieldValue> = {
+      [tagKey]: admin.firestore.FieldValue.increment(agg.totalSeconds),
+    };
+
     const update: Record<string, any> = {
       date: dayId,
       tz,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       totalSeconds: admin.firestore.FieldValue.increment(agg.totalSeconds),
-      [`byTagSeconds.${tagKey}`]: admin.firestore.FieldValue.increment(agg.totalSeconds),
+      byHourSeconds: byHourSecondsUpdate,
+      byTagSeconds: byTagSecondsUpdate,
     };
-
-    agg.byHourSeconds.forEach((sec, hourIdx) => {
-      if (!sec) return;
-      update[`byHourSeconds.${hourIdx}`] = admin.firestore.FieldValue.increment(sec);
-    });
 
     batch.set(dailyRef, update, { merge: true });
   }
@@ -93,12 +102,18 @@ async function incrementRollupsForSession(opts: {
   for (const [monthId, seconds] of byMonthTotalSeconds.entries()) {
     if (!seconds) continue;
     const monthlyRef = userRef.collection("monthlyRollups").doc(monthId);
+    
+    // Build byTagSeconds as a proper nested object for correct Firestore merge
+    const byTagSecondsUpdate: Record<string, FirebaseFirestore.FieldValue> = {
+      [tagKey]: admin.firestore.FieldValue.increment(seconds),
+    };
+
     const update: Record<string, any> = {
       month: monthId,
       tz,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       totalSeconds: admin.firestore.FieldValue.increment(seconds),
-      [`byTagSeconds.${tagKey}`]: admin.firestore.FieldValue.increment(seconds),
+      byTagSeconds: byTagSecondsUpdate,
     };
     batch.set(monthlyRef, update, { merge: true });
   }
