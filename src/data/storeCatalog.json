@@ -3,6 +3,7 @@
     "id": "pet_smurf",
     "name": "Smurf",
     "category": "Pet",
+    "gender": "Male",
     "priceCoins": 360,
     "imageKey": "smurf",
     "description": "A bright blue buddy who cheers when you keep momentum."
@@ -11,6 +12,7 @@
     "id": "pet_chedrick",
     "name": "Chedrick",
     "category": "Pet",
+    "gender": "Male",
     "priceCoins": 360,
     "imageKey": "chedrick",
     "description": "A laid-back friend who reminds you to pace your focus."
@@ -19,6 +21,7 @@
     "id": "pet_pebbles",
     "name": "Pebbles",
     "category": "Pet",
+    "gender": "Male",
     "priceCoins": 420,
     "imageKey": "pebbles",
     "description": "Collects little wins and stacks them into big progress."
@@ -27,6 +30,7 @@
     "id": "pet_gooner",
     "name": "Gooner",
     "category": "Pet",
+    "gender": "Male",
     "priceCoins": 480,
     "imageKey": "gooner",
     "description": "Hypes you up before deadlines and celebrates the finish."
@@ -35,6 +39,7 @@
     "id": "pet_kitty",
     "name": "Kitty",
     "category": "Pet",
+    "gender": "Female",
     "priceCoins": 480,
     "imageKey": "kitty",
     "description": "A curious cat who keeps you company during long focus sessions."
