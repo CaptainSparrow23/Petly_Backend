@@ -53,24 +53,31 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
     });
   }
 
-  // Prevent pet purchases - pets are now unlocked by level
-  if (catalogEntry.category === 'Pet') {
+  const isPetPurchase = catalogEntry.category === 'Pet';
+  const expectedPriceCoins = catalogEntry.priceCoins;
+  const expectedPriceKeys =
+    typeof (catalogEntry as any).priceKeys === 'number' && Number.isFinite((catalogEntry as any).priceKeys)
+      ? (catalogEntry as any).priceKeys
+      : null;
+
+  if (isPetPurchase && (!expectedPriceKeys || expectedPriceKeys <= 0)) {
     return res.status(400).json({
       success: false,
-      error: 'Pets cannot be purchased. They are unlocked by reaching certain levels.',
+      error: 'Pet cannot be purchased because it has no key price configured.',
     });
   }
 
-  const expectedPrice = catalogEntry.priceCoins;
-  // Default the submitted price to the canonical price if the client omits it.
-  const submittedPrice =
-    typeof priceCoins === 'number' && priceCoins > 0 ? priceCoins : expectedPrice;
+  if (!isPetPurchase) {
+    // Default the submitted price to the canonical price if the client omits it.
+    const submittedPrice =
+      typeof priceCoins === 'number' && priceCoins > 0 ? priceCoins : expectedPriceCoins;
 
-  if (submittedPrice !== expectedPrice) {
-    return res.status(400).json({
-      success: false,
-      error: 'Price mismatch for requested pet',
-    });
+    if (submittedPrice !== expectedPriceCoins) {
+      return res.status(400).json({
+        success: false,
+        error: 'Price mismatch for requested item',
+      });
+    }
   }
 
   try {
@@ -86,9 +93,9 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
 
     const userData = userDoc.data() ?? {};
     const currentCoins =
-      typeof userData.coins === 'number' && Number.isFinite(userData.coins)
-        ? userData.coins
-        : 0;
+      typeof userData.coins === 'number' && Number.isFinite(userData.coins) ? userData.coins : 0;
+    const currentKeys =
+      typeof userData.petKey === 'number' && Number.isFinite(userData.petKey) ? userData.petKey : 1;
     const ownedItems = Array.isArray(userData[ownedField])
       ? (userData[ownedField] as string[])
       : [];
@@ -99,25 +106,37 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
         message: 'Item already owned; no update necessary',
         data: {
           coins: currentCoins,
+          petKey: currentKeys,
           [ownedField]: ownedItems,
         },
       });
     }
 
-    if (currentCoins < expectedPrice) {
-      return res.status(400).json({
-        success: false,
-        error: 'Insufficient coins for this purchase',
-      });
+    if (isPetPurchase) {
+      if (currentKeys < expectedPriceKeys) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient keys for this purchase',
+        });
+      }
+    } else {
+      if (currentCoins < expectedPriceCoins) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient coins for this purchase',
+        });
+      }
     }
 
-    const updatedCoins = currentCoins - expectedPrice;
+    const updatedCoins = isPetPurchase ? currentCoins : currentCoins - expectedPriceCoins;
+    const updatedKeys = isPetPurchase ? currentKeys - expectedPriceKeys : currentKeys;
     // Use a set to avoid duplicates in case of concurrent purchase attempts.
     const updatedOwnedItems = Array.from(new Set([...ownedItems, petId]));
 
     await userDocRef.set(
       {
         coins: updatedCoins,
+        petKey: updatedKeys,
         [ownedField]: updatedOwnedItems,
         updatedAt: new Date().toISOString(),
       },
@@ -129,6 +148,7 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
       message: 'Item purchased successfully',
       data: {
         coins: updatedCoins,
+        petKey: updatedKeys,
         [ownedField]: updatedOwnedItems,
       },
     });

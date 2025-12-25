@@ -89,6 +89,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       timeActiveToday, // in seconds
       minutesByHour, // 24-element array for today's hourly breakdown
       coins: toNumber(userData?.coins),
+      petKey: toNumber(userData?.petKey, 1),
       ownedPets: Array.isArray(userData?.ownedPets)
         ? (userData.ownedPets as string[])
         : ['pet_smurf'],

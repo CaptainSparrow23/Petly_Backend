@@ -110,6 +110,10 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
       ownedPets: updatedOwnedPets.length > 0 ? updatedOwnedPets : undefined,
     };
 
+    if (!userDoc.exists || userData?.petKey === undefined || userData?.petKey === null) {
+      updateData.petKey = 1;
+    }
+
     // Only set default tags if user doesn't have tagList
     if (!userData?.tagList || !Array.isArray(userData.tagList) || userData.tagList.length === 0) {
       updateData.tagList = defaultTags;
