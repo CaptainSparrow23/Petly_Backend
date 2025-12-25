@@ -109,7 +109,7 @@
     "id": "hat_top_hat_red",
     "name": "Red Top Hat",
     "category": "Hat",
-    "featured": true,
+
     "priceCoins": 100,
     "imageKey": "hat_top_hat_red",
     "description": "Formal attire with a bit of flair to elevate your focus game."
@@ -118,7 +118,7 @@
     "id": "hat_top_hat_silk",
     "name": "Silk Top Hat",
     "category": "Hat",
-    "featured": true,
+  
     "priceCoins": 100,
     "imageKey": "hat_top_hat_silk",
     "description": "Perfect for adding a touch of formality to your focus sessions."
@@ -177,7 +177,7 @@
     "id": "collar_scarf_lilac",
     "name": "Lilac Scarf",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 200,
     "imageKey": "collar_scarf_lilac",
     "description": "Sleek charcoal band for a serious, heads-down mood."
   },
@@ -225,7 +225,7 @@
     "id": "collar_bow_tie_red",
     "name": "Red Bow Tie",
     "category": "Collar",
-    "featured": true,
+
     "priceCoins": 220,
     "imageKey": "collar_bow_tie_red",
     "description": "Smart looking red bow tie to add a touch of elegance."
@@ -234,7 +234,7 @@
     "id": "collar_bow_tie_silk",
     "name": "Silk Bow Tie",
     "category": "Collar",
-    "featured": true,
+
     "priceCoins": 220,
     "imageKey": "collar_bow_tie_silk",
     "description": "Elegant silk bow tie for a refined, focused appearance."
