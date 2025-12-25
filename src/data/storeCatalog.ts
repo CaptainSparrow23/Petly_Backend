@@ -7,6 +7,7 @@ export interface StoreCatalogEntry {
   name: string;
   category: StoreCategory;
   priceCoins: number;
+  priceKeys?: number;
   imageKey: string;
   description: string;
   featured?: boolean;
