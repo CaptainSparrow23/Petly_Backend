@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
+import admin from 'firebase-admin';
+import { ensurePetFriendshipDoc } from '../../utils/petFriendships';
 
 const router = Router();
 
@@ -73,11 +75,12 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
       ];
 
       // User document doesn't exist, create it with email and displayName
+      const now = new Date();
       await userDocRef.set({
         email: email,
         displayName: displayName || null,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
+        createdAt: now.toISOString(),
+        lastLogin: now.toISOString(),
         coins: 100,
         petKey: 1,
         totalXP: 0,
@@ -91,6 +94,8 @@ router.post('/save-user-info', async (req: Request, res: Response) => {
         selectedGadget: 'gadget_laptop',
         tagList: defaultTags,
       });
+
+      await ensurePetFriendshipDoc(userDocRef, 'pet_smurf', admin.firestore.Timestamp.fromDate(now));
 
       console.log(`✅ Created new user document: ${userId} (${email})`);
 

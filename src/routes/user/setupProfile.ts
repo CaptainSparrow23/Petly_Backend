@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
 import { getPetsUnlockedUpToLevel } from '../../utils/petUnlocks';
+import { ensurePetFriendshipDoc } from '../../utils/petFriendships';
 
 const router = Router();
 
@@ -120,6 +121,12 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
     }
 
     await userDocRef.set(updateData, { merge: true });
+
+    if (newPets.length > 0) {
+      for (const petId of newPets) {
+        await ensurePetFriendshipDoc(userDocRef, petId);
+      }
+    }
 
     if (newPets.length > 0) {
       console.log(`🎉 Tutorial complete - unlocked pets for user ${userId}: ${newPets.join(', ')}`);
