@@ -1,9 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
-import { PET_UNLOCKS_BY_LEVEL } from '../../utils/petUnlocks';
 import { storeCatalog } from '../../data/storeCatalog';
 import { calculateLevel } from '../../utils/levelUtils';
-import { ensurePetFriendshipDoc } from '../../utils/petFriendships';
 
 const router = Router();
 
@@ -74,8 +72,8 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    // Determine all reward item ids for this level
-    const petRewards = PET_UNLOCKS_BY_LEVEL[numericLevel] ?? [];
+    // Determine all reward item ids for this level (pets are no longer unlocked via focus rank)
+    const petRewards: string[] = [];
     const gadgetRewards = LEVEL_GADGET_REWARDS[numericLevel] ?? [];
     const rewardIds = Array.from(new Set([...petRewards, ...gadgetRewards]));
 
@@ -146,13 +144,6 @@ router.post('/:userId', async (req: Request, res: Response) => {
     newData.updatedAt = new Date().toISOString();
 
     await userRef.set(newData, { merge: true });
-
-    if (Array.isArray(newData.ownedPets)) {
-      const newlyGrantedPets = newData.ownedPets.filter((id: string) => petRewards.includes(id));
-      for (const petId of newlyGrantedPets) {
-        await ensurePetFriendshipDoc(userRef, petId);
-      }
-    }
 
     return res.status(200).json({
       success: true,
