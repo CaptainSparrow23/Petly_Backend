@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
 import { storeCatalog } from '../../data/storeCatalog';
+import { ensurePetFriendshipDoc } from '../../utils/petFriendships';
 
 const router = Router();
 
@@ -142,6 +143,10 @@ router.post('/purchase/:userId', async (req: Request, res: Response) => {
       },
       { merge: true }
     );
+
+    if (isPetPurchase) {
+      await ensurePetFriendshipDoc(userDocRef, petId);
+    }
 
     return res.status(200).json({
       success: true,

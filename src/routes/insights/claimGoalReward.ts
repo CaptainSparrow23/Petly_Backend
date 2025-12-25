@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
-import { awardXpAndUpdateLevel } from '../../utils/xpRewards';
+import admin from 'firebase-admin';
 
 const router = Router();
 
-// XP rewards for goals
+// Coin rewards for goals
 const REWARDS = {
   daily: { amount: 25, claimField: 'lastDailyGoalClaim' },
   weekly: { amount: 50, claimField: 'lastWeeklyGoalClaim' },
@@ -58,13 +58,11 @@ router.post('/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    // Award XP using shared utility (updates totalXP & returns level info)
-    const { oldLevel, newLevel } = await awardXpAndUpdateLevel(userDocRef, amount);
-
-    // Mark this goal as claimed for the current period
+    // Mark this goal as claimed for the current period and award coins
     await userDocRef.set(
       {
         [claimField]: currentPeriod,
+        coins: admin.firestore.FieldValue.increment(amount),
         updatedAt: new Date().toISOString(),
       },
       { merge: true }
@@ -75,9 +73,9 @@ router.post('/:userId', async (req: Request, res: Response) => {
       message: `${goalType} goal reward claimed!`,
       data: {
         rewardAmount: amount,
-        xpAwarded: amount,
-        oldLevel,
-        newLevel,
+        coinsAwarded: amount,
+        // Backward-compatible field for older clients that still expect xpAwarded.
+        xpAwarded: 0,
         claimedAt: currentPeriod,
       },
     });

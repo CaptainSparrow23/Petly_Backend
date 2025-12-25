@@ -280,19 +280,27 @@ router.post("/", async (req: Request, res: Response) => {
       }
 
       if (selectedPet) {
-        await db
+        const friendshipRef = db
           .collection("users")
           .doc(userId)
           .collection("petFriendships")
-          .doc(selectedPet)
-          .set(
+          .doc(selectedPet);
+
+        await db.runTransaction(async (tx) => {
+          const snap = await tx.get(friendshipRef);
+          const hasCreatedAt = snap.exists && snap.data()?.createdAt != null;
+
+          tx.set(
+            friendshipRef,
             {
+              ...(hasCreatedAt ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
               totalXP: admin.firestore.FieldValue.increment(xpAwarded),
               totalFocusSeconds: admin.firestore.FieldValue.increment(computedDurationSec),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
             { merge: true }
           );
+        });
       }
     }
 
