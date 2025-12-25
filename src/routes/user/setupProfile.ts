@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../firebase';
-import { getPetsUnlockedUpToLevel } from '../../utils/petUnlocks';
 import { ensurePetFriendshipDoc } from '../../utils/petFriendships';
 
 const router = Router();
@@ -85,17 +84,14 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
     const userDoc = await userDocRef.get();
     const userData = userDoc.exists ? userDoc.data() : {};
     
-    // Tutorial completion = Level 2, unlock Smurf
-    const tutorialLevel = 2;
-    const petsToUnlock = getPetsUnlockedUpToLevel(tutorialLevel);
     const currentOwnedPets = Array.isArray(userData?.ownedPets)
       ? (userData!.ownedPets as string[])
       : [];
     
-    const newPets = petsToUnlock.filter(petId => !currentOwnedPets.includes(petId));
-    const updatedOwnedPets = newPets.length > 0
-      ? [...currentOwnedPets, ...newPets]
-      : currentOwnedPets;
+    const defaultPetId = 'pet_smurf';
+    const updatedOwnedPets = currentOwnedPets.includes(defaultPetId)
+      ? currentOwnedPets
+      : [...currentOwnedPets, defaultPetId];
 
     // Default tags if user doesn't have any
     const defaultTags = [
@@ -122,15 +118,7 @@ router.post('/setup-profile', async (req: Request, res: Response) => {
 
     await userDocRef.set(updateData, { merge: true });
 
-    if (newPets.length > 0) {
-      for (const petId of newPets) {
-        await ensurePetFriendshipDoc(userDocRef, petId);
-      }
-    }
-
-    if (newPets.length > 0) {
-      console.log(`🎉 Tutorial complete - unlocked pets for user ${userId}: ${newPets.join(', ')}`);
-    }
+    await ensurePetFriendshipDoc(userDocRef, defaultPetId);
     console.log(`✅ Profile setup complete for user ${userId}: "${trimmedUsername}"`);
 
     res.status(200).json({

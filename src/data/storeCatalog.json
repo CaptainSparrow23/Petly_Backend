@@ -5,7 +5,7 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-    "priceCoins": 360,
+
     "imageKey": "smurf",
     "description": "A bright blue buddy who cheers when you keep momentum."
   },
@@ -15,7 +15,7 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-    "priceCoins": 360,
+
     "imageKey": "chedrick",
     "description": "A laid-back friend who reminds you to pace your focus."
   },
@@ -25,7 +25,7 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-    "priceCoins": 420,
+
     "imageKey": "pebbles",
     "description": "Collects little wins and stacks them into big progress."
   },
@@ -35,7 +35,7 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-    "priceCoins": 480,
+
     "imageKey": "gooner",
     "description": "Hypes you up before deadlines and celebrates the finish."
   },
@@ -45,7 +45,7 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Female",
-    "priceCoins": 480,
+
     "imageKey": "kitty",
     "description": "A curious cat who keeps you company during long focus sessions."
   },
@@ -53,7 +53,7 @@
     "id": "hat_beanie_minty",
     "name": "Minty Beanie",
     "category": "Hat",
-    "priceCoins": 240,
+    "priceCoins": 200,
     "imageKey": "hat_beanie_minty",
     "description": "Soft brim, warm tones—perfect for morning focus sprints."
   },
@@ -61,7 +61,7 @@
     "id": "hat_beanie_sunset",
     "name": "Sunset Beanie",
     "category": "Hat",
-    "priceCoins": 260,
+    "priceCoins": 200,
     "imageKey": "hat_beanie_sunset",
     "description": "Adds calm confidence and a touch of creative flair."
   },
@@ -69,7 +69,7 @@
     "id": "hat_beanie_lilac",
     "name": "Lilac Beanie",
     "category": "Hat",
-    "priceCoins": 280,
+    "priceCoins": 200,
     "imageKey": "hat_beanie_lilac",
     "description": "Keeps distractions shaded while your ideas shine."
   },
@@ -77,7 +77,7 @@
     "id": "hat_beanie_snow",
     "name": "Snow Beanie",
     "category": "Hat",
-    "priceCoins": 220,
+    "priceCoins": 200,
     "imageKey": "hat_beanie_snow",
     "description": "Lightweight band that says 'let's get this done.'"
   },
@@ -85,7 +85,7 @@
     "id": "hat_bucket_hat",
     "name": "Bucket Hat",
     "category": "Hat",
-    "priceCoins": 100,
+    "priceCoins": 150,
     "imageKey": "hat_bucket_hat",
     "description": "Casual hat that adds a laid-back vibe to your focus sessions."
   },
@@ -93,7 +93,7 @@
     "id": "hat_bucket_hat_blue",
     "name": "Blue Bucket Hat",
     "category": "Hat",
-    "priceCoins": 100,
+    "priceCoins": 150,
     "imageKey": "hat_bucket_hat_blue",
     "description": "Casual hat that adds a laid-back vibe to your focus sessions."
   },
@@ -101,7 +101,7 @@
     "id": "hat_bucket_hat_green",
     "name": "Green Bucket Hat",
     "category": "Hat",
-    "priceCoins": 100,
+    "priceCoins": 150,
     "imageKey": "hat_bucket_hat_green",
     "description": "Casual hat that adds a laid-back vibe to your focus sessions."
   },
@@ -109,8 +109,7 @@
     "id": "hat_top_hat_red",
     "name": "Red Top Hat",
     "category": "Hat",
-
-    "priceCoins": 100,
+    "priceCoins": 240,
     "imageKey": "hat_top_hat_red",
     "description": "Formal attire with a bit of flair to elevate your focus game."
   },
@@ -118,8 +117,7 @@
     "id": "hat_top_hat_silk",
     "name": "Silk Top Hat",
     "category": "Hat",
-  
-    "priceCoins": 100,
+    "priceCoins": 240,
     "imageKey": "hat_top_hat_silk",
     "description": "Perfect for adding a touch of formality to your focus sessions."
   },
@@ -128,7 +126,7 @@
     "name": "Toque Blanche",
     "category": "Hat",
     "featured": true,
-    "priceCoins": 100,
+    "priceCoins": 500,
     "imageKey": "hat_toque_blanche",
     "description": "Traditional chef's hat to keep you focused in the kitchen."
   },
@@ -136,7 +134,7 @@
     "id": "hat_flower_crown_spring",
     "name": "Spring Flower Crown",
     "category": "Hat",
-    "priceCoins": 100,
+    "priceCoins": 300,
     "imageKey": "hat_flower_crown_spring",
     "description": "An elegant pink flower for a special occasion."
   },
@@ -144,7 +142,7 @@
     "id": "hat_flower_crown_winter",
     "name": "Winter Flower Crown",
     "category": "Hat",
-    "priceCoins": 100,
+    "priceCoins": 300,
     "imageKey": "hat_flower_crown_winter",
     "description": "An elegant blue flower for a special occasion."
   },
@@ -153,7 +151,7 @@
     "name": "Composer Wig",
     "category": "Hat",
     "featured": true,
-    "priceCoins": 100,
+    "priceCoins": 500,
     "imageKey": "hat_wig_composer",
     "description": "A wig for a composer to add a touch of style to your focus sessions."
   },
@@ -185,7 +183,7 @@
     "id": "collar_scarf_snow",
     "name": "Snow Scarf",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 200,
     "imageKey": "collar_scarf_snow",
     "description": "Soft greens that keep you grounded and steady."
   },
@@ -193,7 +191,7 @@
     "id": "collar_standard_leather",
     "name": "Leather Collar",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 160,
     "imageKey": "collar_standard_leather",
     "description": "Classic brown leather for a timeless, focused look."
   },
@@ -201,7 +199,7 @@
     "id": "collar_standard_ocean",
     "name": "Ocean Collar",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 160,
     "imageKey": "collar_standard_ocean",
     "description": "Deep sea blues that inspire calm and concentration."
   },
@@ -209,7 +207,7 @@
     "id": "collar_standard_champion",
     "name": "Champion Collar",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 160,
     "imageKey": "collar_standard_champion",
     "description": "Bold red band to fuel your drive to succeed."
   },
@@ -217,7 +215,7 @@
     "id": "collar_standard_dream",
     "name": "Dream Collar",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 160,
     "imageKey": "collar_standard_dream",
     "description": "Dream collar to add a touch of magic to your focus sessions."
   },
@@ -226,7 +224,7 @@
     "name": "Red Bow Tie",
     "category": "Collar",
 
-    "priceCoins": 220,
+    "priceCoins": 250,
     "imageKey": "collar_bow_tie_red",
     "description": "Smart looking red bow tie to add a touch of elegance."
   },
@@ -234,8 +232,7 @@
     "id": "collar_bow_tie_silk",
     "name": "Silk Bow Tie",
     "category": "Collar",
-
-    "priceCoins": 220,
+    "priceCoins": 250,
     "imageKey": "collar_bow_tie_silk",
     "description": "Elegant silk bow tie for a refined, focused appearance."
   },
@@ -244,23 +241,16 @@
     "name": "Chef's Coat",
     "category": "Collar",
     "featured": true,
-    "priceCoins": 220,
+    "priceCoins": 600,
     "imageKey": "collar_chefs_coat",
     "description": "Professional chef's coat to inspire culinary focus."
   },
-  {
-    "id": "collar_wings_fairy",
-    "name": "Fairy Wings",
-    "category": "Collar",
-    "priceCoins": 220,
-    "imageKey": "collar_wings_fairy",
-    "description": "Fairy wings to add a touch of magic to your focus sessions."
-  },
+
   {
     "id": "collar_bandana_navy",
     "name": "Navy Bandana",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 180,
     "imageKey": "collar_bandana_navy",
     "description": "Navy bandana to add a touch of style to your focus sessions."
   },
@@ -268,7 +258,7 @@
     "id": "collar_bandana_red",
     "name": "Red Bandana",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 180,
     "imageKey": "collar_bandana_red",
     "description": "Red bandana to add a touch of style to your focus sessions."
   },
@@ -276,7 +266,7 @@
     "id": "collar_bandana_desert",
     "name": "Desert Bandana",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 180,
     "imageKey": "collar_bandana_desert",
     "description": "Desert bandana to add a touch of style to your focus sessions."
   },
@@ -284,7 +274,7 @@
     "id": "collar_bandana_forest",
     "name": "Forest Bandana",
     "category": "Collar",
-    "priceCoins": 220,
+    "priceCoins": 180,
     "imageKey": "collar_bandana_forest",
     "description": "Forest bandana to add a touch of style to your focus sessions."
   },
@@ -293,7 +283,7 @@
     "name": "Composer Attire",
     "category": "Collar",
     "featured": true,
-    "priceCoins": 220,
+    "priceCoins": 600,
     "imageKey": "collar_attire_composer",
     "description": "Attire for a composer to add a touch of style to your focus sessions."
   },
@@ -302,7 +292,7 @@
     "name": "Pot and Stove",
     "category": "Gadget",
     "featured": true,
-    "priceCoins": 320,
+    "priceCoins": 750,
     "imageKey": "gadget_pot_and_stove",
     "description": "Emits a soothing pulse to keep your sessions relaxed."
   },
@@ -310,7 +300,7 @@
     "id": "gadget_laptop",
     "name": "Laptop",
     "category": "Gadget",
-    "priceCoins": 320,
+    "priceCoins": 750,
     "imageKey": "gadget_laptop",
     "description": "Nothing to see just a 9 year old laptop."
   },
@@ -319,7 +309,7 @@
     "name": "Classic Cello",
     "featured": true,
     "category": "Gadget",
-    "priceCoins": 420,
+    "priceCoins": 750,
     "imageKey": "gadget_cello_classic",
     "description": "A classic cello to help you focus and relax."
   }
