@@ -9,7 +9,7 @@ const router = Router();
 const LEVEL_GADGET_REWARDS: Record<number, string[]> = {
   2: ['gadget_laptop'],
   6: ['gadget_pot_and_stove'],
-  8: ['gadget_cello_artisan'],
+  8: ['gadget_cello_classic'],
 };
 
 // Map item category to the owned* field on the user document.

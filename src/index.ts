@@ -22,7 +22,6 @@ import getGoals from './routes/insights/getGoals';
 import focusRangeRouter from './routes/insights/getFocusRange';
 import tagDistributionRouter from './routes/insights/getTagDistribution';
 import claimGoalRewardRoute from './routes/insights/claimGoalReward';
-import claimLevelRewardRoute from './routes/rewards/claimLevelReward';
 import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import updateSelectedAccessoriesRoute from './routes/pets/updateSelectedAccessories';
@@ -45,7 +44,6 @@ app.use('/api/get_goals', getGoals);
 app.use('/api/get_focus_range', focusRangeRouter);
 app.use('/api/get_tag_distribution', tagDistributionRouter);
 app.use('/api/claim_goal_reward', claimGoalRewardRoute);
-app.use('/api/claim_level_reward', claimLevelRewardRoute);
 
 app.use('/api/get_friends', getFriendsRoute);
 app.use('/api/search_friends', searchFriendsRoute);
