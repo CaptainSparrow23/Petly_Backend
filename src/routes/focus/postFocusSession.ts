@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import admin from "firebase-admin";
 import { db } from "../../firebase"; // your initialized admin/db module
-import { awardXpAndUpdateLevel } from "../../utils/xpRewards";
 import { DateTime } from "luxon";
 
 const router = Router();
@@ -258,7 +257,9 @@ router.post("/", async (req: Request, res: Response) => {
     const coinsPerInterval = 5;
     const intervalsEarned = Math.floor(computedDurationSec / rewardIntervalSec);
     let coinsAwarded = 0;
-    let xpAwarded = Math.max(0, Math.floor(computedDurationSec / 60));
+    // Focus Rank is deprecated: do not grant account XP.
+    // Keep only companion friendship XP (used for petFriendships).
+    const friendshipXpAwarded = Math.max(0, Math.floor(computedDurationSec / 60));
 
     if (intervalsEarned > 0) {
       const increment = intervalsEarned * coinsPerInterval;
@@ -271,14 +272,7 @@ router.post("/", async (req: Request, res: Response) => {
       );
     }
 
-    if (xpAwarded > 0) {
-      // Apply XP and compute level change in a shared helper.
-      // This updates totalXP but does NOT auto-grant pets or other rewards.
-      const { oldLevel, newLevel } = await awardXpAndUpdateLevel(userRef, xpAwarded);
-      if (newLevel > oldLevel) {
-        console.log(`🎉 User ${userId} leveled up from ${oldLevel} to ${newLevel}`);
-      }
-
+    if (friendshipXpAwarded > 0) {
       if (selectedPet) {
         const friendshipRef = db
           .collection("users")
@@ -294,7 +288,7 @@ router.post("/", async (req: Request, res: Response) => {
             friendshipRef,
             {
               ...(hasCreatedAt ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
-              totalXP: admin.firestore.FieldValue.increment(xpAwarded),
+              totalXP: admin.firestore.FieldValue.increment(friendshipXpAwarded),
               totalFocusSeconds: admin.firestore.FieldValue.increment(computedDurationSec),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
@@ -307,7 +301,8 @@ router.post("/", async (req: Request, res: Response) => {
     return res.json({
       success: true,
       message: "Focus session saved and daily streak updated",
-      data: { id: focusRef.id, coinsAwarded, xpAwarded },
+      // Backward-compatible field for older clients that still expect xpAwarded.
+      data: { id: focusRef.id, coinsAwarded, xpAwarded: 0, friendshipXpAwarded },
     });
   } catch (error) {
     console.error("❌ Error saving focus session:", error);

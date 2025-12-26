@@ -115,9 +115,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
       totalFocusSeconds: toNumber(userData?.totalFocusSeconds),
       lastDailyGoalClaim: userData?.lastDailyGoalClaim ?? null,
       lastWeeklyGoalClaim: userData?.lastWeeklyGoalClaim ?? null,
-      claimedLevelRewards: Array.isArray(userData?.claimedLevelRewards)
-        ? (userData.claimedLevelRewards as number[])
-        : [],
+      // Focus Rank is deprecated: do not expose level-claim state to clients.
       totalXP: toNumber(userData?.totalXP),
       friendsCount,
       petFriendships,
