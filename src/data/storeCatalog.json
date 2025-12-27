@@ -1,21 +1,19 @@
 [
   {
     "id": "pet_smurf",
-    "name": "Smurf",
+    "name": "Tony",
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-
     "imageKey": "smurf",
     "description": "A bright blue buddy who cheers when you keep momentum."
   },
   {
     "id": "pet_chedrick",
-    "name": "Chedrick",
+    "name": "Cheddar",
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-
     "imageKey": "chedrick",
     "description": "A laid-back friend who reminds you to pace your focus."
   },
@@ -25,28 +23,34 @@
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-
     "imageKey": "pebbles",
     "description": "Collects little wins and stacks them into big progress."
   },
   {
     "id": "pet_gooner",
-    "name": "Gooner",
+    "name": "Steffan",
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Male",
-
     "imageKey": "gooner",
     "description": "Hypes you up before deadlines and celebrates the finish."
   },
   {
     "id": "pet_kitty",
-    "name": "Kitty",
+    "name": "Yuki",
     "category": "Pet",
     "priceKeys": 1,
     "gender": "Female",
-
     "imageKey": "kitty",
+    "description": "A curious cat who keeps you company during long focus sessions."
+  },
+  {
+    "id": "pet_lumi",
+    "name": "Lumi",
+    "category": "Pet",
+    "priceKeys": 1,
+    "gender": "Female",
+    "imageKey": "lumi",
     "description": "A curious cat who keeps you company during long focus sessions."
   },
   {

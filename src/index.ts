@@ -26,6 +26,7 @@ import { focusWeekRouter } from './routes/insights/getWeeklyFocus';
 import updateSelectedPetRoute from './routes/pets/updateSelectedPet';
 import updateSelectedAccessoriesRoute from './routes/pets/updateSelectedAccessories';
 import getOwnedPetsRoute from './routes/pets/getOwnedPets';
+import claimPetKeyRoute from './routes/pets/claimPetKey';
 import updateTagsRoute from './routes/user/updateTags';
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.use('/api/store', featuredSetsRoute);
 app.use('/api/pets/update_pet', updateSelectedPetRoute);
 app.use('/api/pets/update_accessories', updateSelectedAccessoriesRoute);
 app.use('/api/pets', getOwnedPetsRoute);
+app.use('/api/pets/claim_pet_key', claimPetKeyRoute);
 
 // Start server
 app.listen(PORT, () => {

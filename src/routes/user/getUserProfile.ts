@@ -38,7 +38,13 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const petFriendshipsSnap = await userRef.collection('petFriendships').get();
     const petFriendships: Record<
       string,
-      { totalXP: number; totalFocusSeconds: number; updatedAt: string | null; createdAt: string | null }
+      {
+        totalXP: number;
+        totalFocusSeconds: number;
+        updatedAt: string | null;
+        createdAt: string | null;
+        level10KeyClaimedAt: string | null;
+      }
     > = {};
     petFriendshipsSnap.forEach((doc) => {
       const d = doc.data() as any;
@@ -47,6 +53,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
         totalFocusSeconds: toNumber(d?.totalFocusSeconds, 0),
         updatedAt: d?.updatedAt?.toDate?.()?.toISOString() ?? null,
         createdAt: d?.createdAt?.toDate?.()?.toISOString() ?? null,
+        level10KeyClaimedAt: d?.level10KeyClaimedAt?.toDate?.()?.toISOString() ?? null,
       };
     });
 
